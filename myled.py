@@ -42,6 +42,14 @@ def wheel(pos):
 		return Color(0, pos * 3, 255 - pos * 3)
 
 
+def breathe(wait_ms=300):
+  for i in range(190, 256):
+    for j in range(140, strip.numPixels()):
+      strip.setPixelColorRGB(j,255,255,255)
+    strip.setBrightness(i)
+    strip.show()
+    time.sleep(wait_ms/1000.0)
+
 # Main program logic follows:
 if __name__ == '__main__':
   # Create NeoPixel object with appropriate configuration.
@@ -51,4 +59,5 @@ if __name__ == '__main__':
   
   print 'Press Ctrl-C to quit.'
   while True:
-    colorWipe(strip, Color(255, 0, 0))  # Red wipe
+    # colorWipe(strip, Color(255, 0, 0))  # Red wipe
+    breathe();
