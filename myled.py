@@ -7,8 +7,9 @@
 # jglukasik - making some changes of my own to learn this api
 
 import time
+import argparse
 
-from neopixel import *
+#from neopixel import *
 
 
 # LED strip configuration:
@@ -50,14 +51,28 @@ def breathe(wait_ms=300):
     strip.show()
     time.sleep(wait_ms/1000.0)
 
+def on():
+    print "yo dawg its on"
+
+def off():
+    print "yo dawg its off"
+
 # Main program logic follows:
 if __name__ == '__main__':
-  # Create NeoPixel object with appropriate configuration.
-  strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS)
-  # Intialize the library (must be called once before other functions).
-  strip.begin()
-  
-  print 'Press Ctrl-C to quit.'
-  while True:
-    # colorWipe(strip, Color(255, 0, 0))  # Red wipe
-    breathe();
+  # Create and initialize NeoPixel object
+  #strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS)
+  #strip.begin()
+
+  parser = argparse.ArgumentParser(description="Flash some LEDs")
+  parser.add_argument( "-p"
+                     ,  "--pattern"
+                     , help="select LED pattern"
+                     , default="on"
+                     )
+  args = parser.parse_args()
+
+  patterns = { "on"  : on
+            , "off" : off
+            }
+
+  patterns[args.pattern]()
