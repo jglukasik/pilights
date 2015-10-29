@@ -52,10 +52,25 @@ def breathe(wait_ms=300):
     time.sleep(wait_ms/1000.0)
 
 def on():
-    print "yo dawg its on"
+  for j in range(0, strip.numPixels()):
+    strip.setPixelColorRGB(j,255,255,255)
+  strip.setBrightness(60)
+  strip.show()
 
 def off():
-    print "yo dawg its off"
+  strip.setBrightness(0)
+  strip.show()
+
+def bright_loop(wait_ms=300):
+  for i in range(strip.numPixels() * 5/4):
+    for j in range(0, strip.numPixels()):
+      if (i != j):
+        strip.setPixelColorRGB(j,100,100,100)
+      else if (i < strip.numPixels()):
+        strip.setPixelColorRGB(j,255,255,255)
+    time.sleep(wait_ms/1000.0)
+    strip.setBrightness(i)
+
 
 # Main program logic follows:
 if __name__ == '__main__':
@@ -71,8 +86,9 @@ if __name__ == '__main__':
                      )
   args = parser.parse_args()
 
-  patterns = { "on"  : on
-            , "off" : off
+  patterns = {  "on" : on
+            ,  "off" : off
+            , "loop" : bright_loop
             }
 
   patterns[args.pattern]()
