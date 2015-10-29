@@ -2,14 +2,14 @@
 # Author: Tony DiCola (tony@tonydicola.com)
 #
 # Direct port of the Arduino NeoPixel library strandtest example.  Showcases
-# various animations on a strip of NeoPixels.
-#
+# various animations on a strip of NeoPixels.  #
 # jglukasik - making some changes of my own to learn this api
 
-import time
 import argparse
+import random
+import time
 
-#from neopixel import *
+from neopixel import *
 
 
 # LED strip configuration:
@@ -61,22 +61,30 @@ def off():
   strip.setBrightness(0)
   strip.show()
 
-def bright_loop(wait_ms=300):
-  for i in range(strip.numPixels() * 5/4):
-    for j in range(0, strip.numPixels()):
-      if (i != j):
-        strip.setPixelColorRGB(j,100,100,100)
-      else if (i < strip.numPixels()):
-        strip.setPixelColorRGB(j,255,255,255)
+def bright_loop(wait_ms=100):
+  runners = []
+  while(1):
+    for i in range(strip.numPixels()):
+      strip.setPixelColorRGB(i,100,100,100)
+    for r in runners:
+      strip.setPixelColorRGB(*r)
+    strip.setBrightness(60)
+    strip.show()
     time.sleep(wait_ms/1000.0)
-    strip.setBrightness(i)
+    if random.random() < 0.05:
+      runners.append([0,random.randint(0,255),random.randint(0,255),random.randint(0,255)])
+    for r in runners:
+      r[0] = r[0] + 1
+      if r[0] > strip.numPixels():
+        runners.remove(r)
+    print runners
 
 
 # Main program logic follows:
 if __name__ == '__main__':
   # Create and initialize NeoPixel object
-  #strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS)
-  #strip.begin()
+  strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS)
+  strip.begin()
 
   parser = argparse.ArgumentParser(description="Flash some LEDs")
   parser.add_argument( "-p"
