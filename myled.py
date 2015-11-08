@@ -7,6 +7,9 @@
 
 import argparse
 import random
+import signal
+import sys
+import threading
 import time
 
 from neopixel import *
@@ -61,7 +64,7 @@ def off():
   strip.setBrightness(0)
   strip.show()
 
-def bright_loop(wait_ms=100):
+def bright_loop(wait_ms=100, new_chance=0.2):
   runners = []
   while(1):
     for i in range(strip.numPixels()):
@@ -71,14 +74,16 @@ def bright_loop(wait_ms=100):
     strip.setBrightness(60)
     strip.show()
     time.sleep(wait_ms/1000.0)
-    if random.random() < 0.05:
+    if random.random() < new_chance:
       runners.append([0,random.randint(0,255),random.randint(0,255),random.randint(0,255)])
     for r in runners:
       r[0] = r[0] + 1
       if r[0] > strip.numPixels():
         runners.remove(r)
-    print runners
 
+def signal_handler(signal, frame):
+  print('Exiting...')
+  sys.exit(0)
 
 # Main program logic follows:
 if __name__ == '__main__':
@@ -99,4 +104,17 @@ if __name__ == '__main__':
             , "loop" : bright_loop
             }
 
-  patterns[args.pattern]()
+  # patterns[args.pattern]()
+
+  signal.signal(signal.SIGINT, signal_handler)
+
+  t = threading.Thread(target=bright_loop)
+  t.daemon = True
+  t.start()
+  
+  print "Yo the loop is running"
+  print ""
+
+  while True:
+    thing = raw_input('Press some goddamn keys: ')
+    print 'You entered this fucking thing -> ', thing
