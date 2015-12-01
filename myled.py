@@ -11,7 +11,9 @@ import signal
 import sys
 import threading
 import time
+import urlparse
 
+from wsgiref.simple_server import make_server
 from Queue import Queue
 from neopixel import *
 
@@ -113,14 +115,39 @@ def worker():
     if not mq.empty():
       message = mq.get()
     if message == "stop":
-      print "Fuck i gotta stop"
       run = False
-    elif message == "start":
-      print "Here we go again..."
+    elif message == "start" or message == "on":
       run = True
+    elif message == "off":
+      run = False
+      strip.setBrightness(0)
+      strip.show()
 
     message = ''
 
+def hello_world(environ, start_response):
+    path = environ.get('PATH_INFO', '').lstrip('/')
+    params = urlparse.parse_qs(environ.get('QUERY_STRING', ''))
+    msg = "intentionally left blank"
+
+    if path:
+      msg = path
+      mq.put(msg)
+
+    if 'msg' in params:
+      msg = params['msg'][0]
+      mq.put(msg)
+
+    start_response('200 OK', [('Content-Type', 'text/html')])
+    return ['''
+       <body style="font-size:xx-large">
+       <a href="http://pi.jgl.me/start" style="color:green">start</a>
+       <br>
+       <a href="http://pi.jgl.me/stop" style="color:yellow">stop</a>
+       <br>
+       <a href="http://pi.jgl.me/off" style="color:red">off</a>
+       </body>
+       ''' % {'msg': msg}]
 
 # Main program logic follows:
 if __name__ == '__main__':
@@ -152,9 +179,10 @@ if __name__ == '__main__':
   print "Yo the loop is running"
   print ""
 
+  print "Starting web server..."
+  srv = make_server('192.168.1.20', 80, hello_world)
+  srv.serve_forever()
+
   while True:
     thing = raw_input('Press some goddamn keys: ')
-    print 'You entered this fucking thing -> ', thing
     mq.put(thing)
-    if thing == "stop":
-      print "I'm afraid I can't let you do that, Dave"
