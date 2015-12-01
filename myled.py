@@ -12,6 +12,7 @@ import sys
 import threading
 import time
 
+from Queue import Queue
 from neopixel import *
 
 
@@ -23,6 +24,8 @@ LED_DMA        = 5       # DMA channel to use for generating signal (try 5)
 LED_BRIGHTNESS = 255     # Set to 0 for darkest and 255 for brightest
 LED_INVERT     = False   # True to invert the signal (when using NPN transistor level shift)
 
+
+mq = Queue()
 
 # Define functions which animate LEDs in various ways.
 def colorWipe(strip, color, wait_ms=5):
@@ -85,6 +88,40 @@ def signal_handler(signal, frame):
   print('Exiting...')
   sys.exit(0)
 
+def worker():
+  runners = []
+  wait_ms = 100
+  new_chance = 0.2
+  run = True
+  message = ''
+  while True:
+    if run:
+      for i in range(strip.numPixels()):
+        strip.setPixelColorRGB(i,100,100,100)
+      for r in runners:
+        strip.setPixelColorRGB(*r)
+      strip.setBrightness(60)
+      strip.show()
+      time.sleep(wait_ms/1000.0)
+      if random.random() < new_chance:
+        runners.append([0,random.randint(0,255),random.randint(0,255),random.randint(0,255)])
+      for r in runners:
+        r[0] = r[0] + 1
+        if r[0] > strip.numPixels():
+          runners.remove(r)
+
+    if not mq.empty():
+      message = mq.get()
+    if message == "stop":
+      print "Fuck i gotta stop"
+      run = False
+    elif message == "start":
+      print "Here we go again..."
+      run = True
+
+    message = ''
+
+
 # Main program logic follows:
 if __name__ == '__main__':
   # Create and initialize NeoPixel object
@@ -108,7 +145,7 @@ if __name__ == '__main__':
 
   signal.signal(signal.SIGINT, signal_handler)
 
-  t = threading.Thread(target=bright_loop)
+  t = threading.Thread(target=worker)
   t.daemon = True
   t.start()
   
@@ -118,3 +155,6 @@ if __name__ == '__main__':
   while True:
     thing = raw_input('Press some goddamn keys: ')
     print 'You entered this fucking thing -> ', thing
+    mq.put(thing)
+    if thing == "stop":
+      print "I'm afraid I can't let you do that, Dave"
