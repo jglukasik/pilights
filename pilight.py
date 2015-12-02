@@ -16,7 +16,6 @@ import re
 
 from wsgiref.simple_server import make_server
 from Queue import Queue
-from neopixel import *
 
 
 # LED strip configuration:
@@ -30,11 +29,21 @@ LED_INVERT     = False   # True to invert the signal (when using NPN transistor 
 # Messaging queue for main input thread to communicate with led painter
 mq = Queue()
 
+class dummy_strip:
+  def setBrightness(self, brightness):
+    return
+  def numPixels(self):
+    return LED_COUNT
+  def setPixelColorRGB(self,n,r,g,b):
+    return
+  def show(self):
+    return
+
 # from http://stackoverflow.com/questions/214359/converting-hex-color-to-rgb-and-vice-versa
 def hex_to_rgb(value):
-    value = value.lstrip('#')
-    lv = len(value)
-    return tuple(int(value[i:i + lv // 3], 16) for i in range(0, lv, lv // 3))
+  value = value.lstrip('#')
+  lv = len(value)
+  return tuple(int(value[i:i + lv // 3], 16) for i in range(0, lv, lv // 3))
 
 # Handle ctrl-c
 def signal_handler(signal, frame):
@@ -57,9 +66,6 @@ def led_step(strip, runners):
       runners.remove(r)
 
 def painter():
-  # Create and initialize NeoPixel object
-  strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS)
-  strip.begin()
   runners = []
 
   wait_ms = 100
@@ -135,6 +141,7 @@ if __name__ == '__main__':
 
   parser = argparse.ArgumentParser(description="Flash some LEDs")
   parser.add_argument( '-s', action='store_true', dest='use_server')
+  parser.add_argument( '-d', action='store_true', dest='dry_run')
   args = parser.parse_args()
 
   signal.signal(signal.SIGINT, signal_handler)
@@ -143,6 +150,15 @@ if __name__ == '__main__':
   t.daemon = True
   t.start()
   
+  if args.dry_run:
+    strip = dummy_strip()
+  else:
+    from neopixel import *
+
+    # Create and initialize NeoPixel object
+    strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS)
+    strip.begin()
+
   print "Welcome to piLights"
   print ""
 
