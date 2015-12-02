@@ -26,74 +26,29 @@ LED_DMA        = 5       # DMA channel to use for generating signal (try 5)
 LED_BRIGHTNESS = 255     # Set to 0 for darkest and 255 for brightest
 LED_INVERT     = False   # True to invert the signal (when using NPN transistor level shift)
 
-
+# Messaging queue for main input thread to communicate with led painter
 mq = Queue()
 
-# Define functions which animate LEDs in various ways.
-def colorWipe(strip, color, wait_ms=5):
-  """Wipe color across display a pixel at a time."""
-  for i in range(strip.numPixels()):
-    for j in range(strip.numPixels()-i):
-      if (j-1) >= 0: strip.setPixelColor(j-1, Color(0,0,0))
-      strip.setPixelColor(j, wheel(((i * 256 / strip.numPixels())) & 255))
-      strip.show()
-      time.sleep(wait_ms/1000.0)
+# from http://stackoverflow.com/questions/214359/converting-hex-color-to-rgb-and-vice-versa
+def hex_to_rgb(value):
+    value = value.lstrip('#')
+    lv = len(value)
+    return tuple(int(value[i:i + lv // 3], 16) for i in range(0, lv, lv // 3))
 
-def wheel(pos):
-	"""Generate rainbow colors across 0-255 positions."""
-	if pos < 85:
-		return Color(pos * 3, 255 - pos * 3, 0)
-	elif pos < 170:
-		pos -= 85
-		return Color(255 - pos * 3, 0, pos * 3)
-	else:
-		pos -= 170
-		return Color(0, pos * 3, 255 - pos * 3)
-
-
-def breathe(wait_ms=300):
-  for i in range(190, 256):
-    for j in range(140, strip.numPixels()):
-      strip.setPixelColorRGB(j,255,255,255)
-    strip.setBrightness(i)
-    strip.show()
-    time.sleep(wait_ms/1000.0)
-
-def on():
-  for j in range(0, strip.numPixels()):
-    strip.setPixelColorRGB(j,255,255,255)
-  strip.setBrightness(60)
-  strip.show()
-
-def off():
-  strip.setBrightness(0)
-  strip.show()
-
-def bright_loop(wait_ms=100, new_chance=0.2):
-  runners = []
-  while(1):
-    for i in range(strip.numPixels()):
-      strip.setPixelColorRGB(i,100,100,100)
-    for r in runners:
-      strip.setPixelColorRGB(*r)
-    strip.setBrightness(60)
-    strip.show()
-    time.sleep(wait_ms/1000.0)
-    if random.random() < new_chance:
-      runners.append([0,random.randint(0,255),random.randint(0,255),random.randint(0,255)])
-    for r in runners:
-      r[0] = r[0] + 1
-      if r[0] > strip.numPixels():
-        runners.remove(r)
-
+# Handle ctrl-c
 def signal_handler(signal, frame):
   print('Exiting...')
   sys.exit(0)
 
-def worker():
+def painter():
+  # Create and initialize NeoPixel object
+  strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS)
+  strip.begin()
+
   runners = []
   wait_ms = 100
   new_chance = 0.2
+  streak_length = 50
   run = True
   message = ''
   while True:
@@ -101,11 +56,13 @@ def worker():
       for i in range(strip.numPixels()):
         strip.setPixelColorRGB(i,100,100,100)
       for r in runners:
-        strip.setPixelColorRGB(*r)
+        if r[0] >= 0:
+          strip.setPixelColorRGB(*r)
       strip.setBrightness(60)
       strip.show()
       time.sleep(wait_ms/1000.0)
-      if random.random() < new_chance:
+      last_runner = runners[-1:]
+      if random.random() < new_chance and (not runners or runners[-1][0] > 0):
         runners.append([0,random.randint(0,255),random.randint(0,255),random.randint(0,255)])
       for r in runners:
         r[0] = r[0] + 1
@@ -114,6 +71,7 @@ def worker():
 
     if not mq.empty():
       message = mq.get()
+
     if message == "stop":
       run = False
     elif message == "start" or message == "on":
@@ -122,10 +80,16 @@ def worker():
       run = False
       strip.setBrightness(0)
       strip.show()
-
+    elif message == "fire":
+      g = range(0,256,256/streak_length)
+      for x in range(0, streak_length):
+        runners.append([-x, 255, g[x], 0])
+    elif message == "quit":
+      return
+    
     message = ''
 
-def hello_world(environ, start_response):
+def server(environ, start_response):
     path = environ.get('PATH_INFO', '').lstrip('/')
     params = urlparse.parse_qs(environ.get('QUERY_STRING', ''))
     msg = "intentionally left blank"
@@ -149,40 +113,34 @@ def hello_world(environ, start_response):
        </body>
        ''' % {'msg': msg}]
 
-# Main program logic follows:
 if __name__ == '__main__':
-  # Create and initialize NeoPixel object
-  strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS)
-  strip.begin()
 
   parser = argparse.ArgumentParser(description="Flash some LEDs")
-  parser.add_argument( "-p"
-                     ,  "--pattern"
-                     , help="select LED pattern"
-                     , default="on"
-                     )
+  parser.add_argument( '-s', action='store_true', dest='use_server')
   args = parser.parse_args()
-
-  patterns = {  "on" : on
-            ,  "off" : off
-            , "loop" : bright_loop
-            }
-
-  # patterns[args.pattern]()
 
   signal.signal(signal.SIGINT, signal_handler)
 
-  t = threading.Thread(target=worker)
+  t = threading.Thread(target=painter)
   t.daemon = True
   t.start()
   
-  print "Yo the loop is running"
+  print "Welcome to piLights"
   print ""
 
-  print "Starting web server..."
-  srv = make_server('192.168.1.20', 80, hello_world)
-  srv.serve_forever()
+  if args.use_server:
+    print "Starting web server..."
+    srv = make_server('192.168.1.20', 80, server)
+    srv.serve_forever()
 
-  while True:
-    thing = raw_input('Press some goddamn keys: ')
+  thing = ''
+  while t.isAlive():
+    thing = raw_input('Send message: ')
     mq.put(thing)
+
+  print 'Closing painter...'
+  while t.isAlive():
+    pass
+
+  print 'Goodbye!'
+

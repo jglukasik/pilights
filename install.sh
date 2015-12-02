@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 # This script installs the necessary dependencies for the raspberry pi wx281x
 # library for powering led light strips.
