@@ -149,7 +149,9 @@ if __name__ == '__main__':
   if args.use_server:
     print "Starting web server..."
     srv = make_server('192.168.1.20', 80, server)
-    srv.serve_forever()
+    s = threading.Thread(target=lambda: srv.serve_forever())
+    s.daemon = True
+    s.start()
 
   thing = ''
   while thing != 'quit':
