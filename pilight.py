@@ -12,6 +12,7 @@ import sys
 import threading
 import time
 import urlparse
+import re
 
 from wsgiref.simple_server import make_server
 from Queue import Queue
@@ -40,34 +41,39 @@ def signal_handler(signal, frame):
   print('Exiting...')
   sys.exit(0)
 
+# Advance each of the runner dots on the strip forward one step
+def led_step(strip, runners):
+  for i in range(strip.numPixels()):
+    strip.setPixelColorRGB(i,100,100,100)
+  for r in runners:
+    if r[0] >= 0:
+      strip.setPixelColorRGB(*r)
+  strip.setBrightness(60)
+  strip.show()
+  last_runner = runners[-1:]
+  for r in runners:
+    r[0] = r[0] + 1
+    if r[0] > strip.numPixels():
+      runners.remove(r)
+
 def painter():
   # Create and initialize NeoPixel object
   strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS)
   strip.begin()
-
   runners = []
+
   wait_ms = 100
   new_chance = 0.2
-  streak_length = 50
+  streak_length = 10
   run = True
+
   message = ''
   while True:
     if run:
-      for i in range(strip.numPixels()):
-        strip.setPixelColorRGB(i,100,100,100)
-      for r in runners:
-        if r[0] >= 0:
-          strip.setPixelColorRGB(*r)
-      strip.setBrightness(60)
-      strip.show()
-      time.sleep(wait_ms/1000.0)
-      last_runner = runners[-1:]
       if random.random() < new_chance and (not runners or runners[-1][0] > 0):
         runners.append([0,random.randint(0,255),random.randint(0,255),random.randint(0,255)])
-      for r in runners:
-        r[0] = r[0] + 1
-        if r[0] > strip.numPixels():
-          runners.remove(r)
+      time.sleep(wait_ms/1000.0)
+      led_step(strip, runners)
 
     if not mq.empty():
       message = mq.get()
@@ -85,8 +91,20 @@ def painter():
       for x in range(0, streak_length):
         runners.append([-x, 255, g[x], 0])
     elif message == "quit":
+      strip.setBrightness(0)
+      strip.show()
       return
     
+    wait_input = re.match('^wait \d+$', message)
+    chance_input = re.match('^chance 0\.\d+$', message)
+    streak_input = re.match('^streak \d+$', message)
+    if wait_input:
+      wait_ms = float(re.findall('\d+', message)[0])
+    elif chance_input:
+      new_chance = float(re.findall('0\.\d+', message)[0])
+    elif streak_input:
+      streak_length = int(re.findall('\d+', message)[0])
+
     message = ''
 
 def server(environ, start_response):
@@ -134,7 +152,7 @@ if __name__ == '__main__':
     srv.serve_forever()
 
   thing = ''
-  while t.isAlive():
+  while thing != 'quit':
     thing = raw_input('Send message: ')
     mq.put(thing)
 
