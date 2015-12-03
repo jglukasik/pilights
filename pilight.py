@@ -68,15 +68,21 @@ def led_step(strip, runners):
 def painter():
   runners = []
 
-  wait_ms = 100
-  new_chance = 0.2
-  streak_length = 10
+  wait_ms = 70
+  new_chance = 0.25
+  streak_chance = 0.01
+  streak_length = 20
   run = True
 
   message = ''
   while True:
     if run:
-      if random.random() < new_chance and (not runners or runners[-1][0] > 0):
+      if random.random() < streak_chance:
+        if random.random() < 0.5:
+          mq.put("fire")
+        else:
+          mq.put("ice")
+      elif random.random() < new_chance and (not runners or runners[-1][0] > 0):
         runners.append([0,random.randint(0,255),random.randint(0,255),random.randint(0,255)])
       time.sleep(wait_ms/1000.0)
       led_step(strip, runners)
@@ -96,6 +102,10 @@ def painter():
       g = range(0,256,256/streak_length)
       for x in range(0, streak_length):
         runners.append([-x, 255, g[x], 0])
+    elif message == "ice":
+      g = range(0,256,256/streak_length)
+      for x in range(0, streak_length):
+        runners.append([-x, 0, g[x], 255])
     elif message == "quit":
       strip.setBrightness(0)
       strip.show()
@@ -134,6 +144,12 @@ def server(environ, start_response):
        <a href="http://pi.jgl.me/stop" style="color:yellow">stop</a>
        <br>
        <a href="http://pi.jgl.me/off" style="color:red">off</a>
+       <br>
+       <br>
+       <br>
+       <a href="http://pi.jgl.me/fire" style="color:orange">fire</a>
+       <br>
+       <a href="http://pi.jgl.me/ice" style="color:blue">ice</a>
        </body>
        ''' % {'msg': msg}]
 
@@ -144,12 +160,6 @@ if __name__ == '__main__':
   parser.add_argument( '-d', action='store_true', dest='dry_run')
   args = parser.parse_args()
 
-  signal.signal(signal.SIGINT, signal_handler)
-
-  t = threading.Thread(target=painter)
-  t.daemon = True
-  t.start()
-  
   if args.dry_run:
     strip = dummy_strip()
   else:
@@ -159,6 +169,12 @@ if __name__ == '__main__':
     strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS)
     strip.begin()
 
+  signal.signal(signal.SIGINT, signal_handler)
+
+  t = threading.Thread(target=painter)
+  t.daemon = True
+  t.start()
+  
   print "Welcome to piLights"
   print ""
 
