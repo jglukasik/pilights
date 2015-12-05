@@ -16,7 +16,8 @@ import re
 
 from Queue import Queue
 from wsgiref.simple_server import make_server
-from ws4py.websocket import EchoWebSocket
+from ws4py.websocket import WebSocket
+from ws4py.messaging import TextMessage
 from ws4py.server.wsgirefserver import WSGIServer, WebSocketWSGIRequestHandler
 from ws4py.server.wsgiutils import WebSocketWSGIApplication
 
@@ -31,6 +32,16 @@ LED_INVERT     = False   # True to invert the signal (when using NPN transistor 
 # Messaging queue for main input thread to communicate with led painter
 mq = Queue()
 runners = []
+connections = []
+
+class PiWebSocket(WebSocket):
+  def received_message(self, message):
+    print message
+
+  def opened(self):
+    connections.append(self)
+
+
 
 class dummy_strip:
   def setBrightness(self, brightness):
@@ -92,9 +103,9 @@ def painter():
     if not mq.empty():
       message = mq.get()
 
-    if message == "stop":
+    if message == "stop" or message = "pause":
       run = False
-    elif message == "start" or message == "on":
+    elif message == "start" or message == "on" or message = "play":
       run = True
     elif message == "off":
       run = False
@@ -115,11 +126,14 @@ def painter():
     
     wait_input = re.match('^wait \d+$', message)
     chance_input = re.match('^chance 0\.\d+$', message)
+    streak_chance_input = re.match('^streakc 0\.\d+$', message)
     streak_input = re.match('^streak \d+$', message)
     if wait_input:
       wait_ms = float(re.findall('\d+', message)[0])
     elif chance_input:
       new_chance = float(re.findall('0\.\d+', message)[0])
+    elif streak_chance_input:
+      streak_chance = float(re.findall('0\.\d+', message)[0])
     elif streak_input:
       streak_length = int(re.findall('\d+', message)[0])
 
@@ -192,16 +206,26 @@ if __name__ == '__main__':
       print "Using websockets..."
       srv = make_server('192.168.1.20', 80, server_class=WSGIServer,
                         handler_class=WebSocketWSGIRequestHandler,
-                        app=WebSocketWSGIApplication(handler_cs=EchoWebSocket))
+                        app=WebSocketWSGIApplication(handler_cls=PiWebSocket))
       srv.initialize_websockets_manager()
       s = threading.Thread(target=lambda: srv.serve_forever())
       s.daemon = True
       s.start()
 
+
   thing = ''
   while thing != 'quit':
     thing = raw_input('Send message: ')
     mq.put(thing)
+    if thing == 'hello':
+      for c in connections:
+        try:
+          print "Sending message..."
+          c.send('hello')
+        except:
+          print "Connection missing, removing..."
+          connections.remove(c)
+
 
   print 'Closing painter...'
   while p.isAlive():
