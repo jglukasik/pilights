@@ -1,10 +1,3 @@
-# NeoPixel library strandtest example
-# Author: Tony DiCola (tony@tonydicola.com)
-#
-# Direct port of the Arduino NeoPixel library strandtest example.  Showcases
-# various animations on a strip of NeoPixels.  #
-# jglukasik - making some changes of my own to learn this api
-
 import argparse
 import random
 import signal
@@ -37,11 +30,9 @@ connections = []
 class PiWebSocket(WebSocket):
   def received_message(self, message):
     print message
-
+    mq.put(str(message))
   def opened(self):
     connections.append(self)
-
-
 
 class dummy_strip:
   def setBrightness(self, brightness):
@@ -82,8 +73,8 @@ def led_step(strip, runners):
 def painter():
 
   wait_ms = 70
-  new_chance = 0.25
-  streak_chance = 0.01
+  new_chance = 0.0
+  streak_chance = 0.0
   streak_length = 20
   run = True
 
@@ -103,9 +94,11 @@ def painter():
     if not mq.empty():
       message = mq.get()
 
-    if message == "stop" or message = "pause":
+    if message == "stop":
       run = False
-    elif message == "start" or message == "on" or message = "play":
+    elif message == "pause":
+      run = not run
+    elif message == "start" or message == "on" or message == "play":
       run = True
     elif message == "off":
       run = False
