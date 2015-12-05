@@ -14,9 +14,11 @@ import time
 import urlparse
 import re
 
-from wsgiref.simple_server import make_server
 from Queue import Queue
-
+from wsgiref.simple_server import make_server
+from ws4py.websocket import EchoWebSocket
+from ws4py.server.wsgirefserver import WSGIServer, WebSocketWSGIRequestHandler
+from ws4py.server.wsgiutils import WebSocketWSGIApplication
 
 # LED strip configuration:
 LED_COUNT      = 150      # Number of LED pixels.
@@ -28,6 +30,7 @@ LED_INVERT     = False   # True to invert the signal (when using NPN transistor 
 
 # Messaging queue for main input thread to communicate with led painter
 mq = Queue()
+runners = []
 
 class dummy_strip:
   def setBrightness(self, brightness):
@@ -66,7 +69,6 @@ def led_step(strip, runners):
       runners.remove(r)
 
 def painter():
-  runners = []
 
   wait_ms = 70
   new_chance = 0.25
@@ -156,6 +158,7 @@ def server(environ, start_response):
 if __name__ == '__main__':
 
   parser = argparse.ArgumentParser(description="Flash some LEDs")
+  parser.add_argument( '-w', action='store_true', dest='use_websockets')
   parser.add_argument( '-s', action='store_true', dest='use_server')
   parser.add_argument( '-d', action='store_true', dest='dry_run')
   args = parser.parse_args()
@@ -171,10 +174,10 @@ if __name__ == '__main__':
 
   signal.signal(signal.SIGINT, signal_handler)
 
-  t = threading.Thread(target=painter)
-  t.daemon = True
-  t.start()
-  
+  p = threading.Thread(target=painter)
+  p.daemon = True
+  p.start()
+
   print "Welcome to piLights"
   print ""
 
@@ -185,13 +188,23 @@ if __name__ == '__main__':
     s.daemon = True
     s.start()
 
+  if args.use_websockets:
+      print "Using websockets..."
+      srv = make_server('192.168.1.20', 80, server_class=WSGIServer,
+                        handler_class=WebSocketWSGIRequestHandler,
+                        app=WebSocketWSGIApplication(handler_cs=EchoWebSocket))
+      srv.initialize_websockets_manager()
+      s = threading.Thread(target=lambda: srv.serve_forever())
+      s.daemon = True
+      s.start()
+
   thing = ''
   while thing != 'quit':
     thing = raw_input('Send message: ')
     mq.put(thing)
 
   print 'Closing painter...'
-  while t.isAlive():
+  while p.isAlive():
     pass
 
   print 'Goodbye!'
