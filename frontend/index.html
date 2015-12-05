@@ -22,6 +22,7 @@
             <a onclick="pause()" class="btn btn-warning">Pause/Play</a>
             <a onclick="fire()" class="btn btn-danger">Fire</a>
             <a onclick="ice()" class="btn btn-info">Ice</a>
+            <a onclick="off()" class="btn btn-primary">Off</a>
             </div>
           </div>
           <div class="row well-lg well" style="display: block; margin: auto; text-align: center;">
@@ -49,7 +50,7 @@
       }
 
 
-  var wsUri = "ws://192.168.1.20";
+  var wsUri = "ws://192.168.1.20:9000";
 
   function init()
   {
@@ -103,6 +104,9 @@
   }
   function ice(){
     doSend("ice");
+  }
+  function off(){
+    doSend("off");
   }
 
   window.addEventListener("load", init, false);
