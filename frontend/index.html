@@ -1,0 +1,111 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+     <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+  </head>
+  <body>
+    <div class="container">
+      <div class="jumbotron" style="text-align: center;">
+        <h1> Light Controller </h1>
+        <blockquote>
+          <small>press buttons</small>
+        </blockquote>
+      </div>
+          <div class="progress">
+            <div class="progress-bar progress-bar-warning" style="width: 100%;"></div>
+          </div>
+      <div class="row">
+        <div class="col-lg-3" style="100% auto;">
+          <div class="row well-lg well" style="display: block; margin: auto; text-align: center;">
+            <h1>Controller</h1>
+            <div class="btn-group-vertical">
+            <a onclick="pause()" class="btn btn-warning">Pause/Play</a>
+            <a onclick="fire()" class="btn btn-danger">Fire</a>
+            <a onclick="ice()" class="btn btn-info">Ice</a>
+            </div>
+          </div>
+          <div class="row well-lg well" style="display: block; margin: auto; text-align: center;">
+            <h1>Log</h1>
+            <div class="well well-lg" id="log"></div>
+          </div>
+        </div>
+        <div id="notepad" class="well col-lg-9" style="display: block; margin: auto; text-align: center;"></div>
+      </div>
+    </div>
+    <script src="js/raphael.js"></script>
+    <script>
+      var paper = new Raphael(document.getElementById('notepad'), 650,650);
+      var indicies = [];
+      for (var i = 0; i < 150; i++){
+        if (i < 57){
+          indicies[i] = paper.circle(145, 610-(10*i), 5);
+        }
+        else if (i > 56 && i <= 93){
+          indicies[i] = paper.circle(145+(10*(i-57)), 50, 5);
+        }
+        else{
+          indicies[i] = paper.circle(505, 40+(10*(i-93)), 5);
+        }
+      }
+
+
+  var wsUri = "ws://192.168.1.20";
+
+  function init()
+  {
+    websocket = new WebSocket(wsUri);
+    websocket.onopen = function(evt) { onOpen(evt) };
+    websocket.onclose = function(evt) { onClose(evt) };
+    websocket.onmessage = function(evt) { onMessage(evt) };
+    websocket.onerror = function(evt) { onError(evt) };
+  }
+
+  function onOpen(evt)
+  {
+    writeToScreen("CONNECTED");
+  }
+
+  function onClose(evt)
+  {
+    writeToScreen("DISCONNECTED");
+  }
+
+  function onMessage(evt)
+  {
+    writeToScreen('<span style="color: blue;">RESPONSE: ' + evt.data+'</span>');
+  }
+
+  function onError(evt)
+  {
+    writeToScreen('<span style="color: red;">ERROR:</span> ' + evt.data);
+  }
+
+  function doSend(message)
+  {
+    writeToScreen("SENT: " + message);
+    websocket.send(message);
+  }
+
+  function writeToScreen(message)
+  {
+    var output = document.getElementById("log");
+    var pre = document.createElement("p");
+    pre.style.wordWrap = "break-word";
+    pre.innerHTML = message;
+    output.appendChild(pre);
+  }
+
+  function pause(){
+    doSend("pause");
+  }
+  function fire(){
+    doSend("fire");
+  }
+  function ice(){
+    doSend("ice");
+  }
+
+  window.addEventListener("load", init, false);
+    </script>
+  </body>
+</html>      
