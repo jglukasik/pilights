@@ -5,7 +5,7 @@ import sys
 import threading
 import time
 import urlparse
-import re
+import json
 
 from Queue import Queue
 from wsgiref.simple_server import make_server
@@ -78,59 +78,61 @@ def painter():
   streak_length = 20
   run = True
 
-  message = ''
+  message = {}
   while True:
     if run:
       if random.random() < streak_chance:
         if random.random() < 0.5:
-          mq.put("fire")
+          mq.put('{"message":"fire"}')
         else:
-          mq.put("ice")
+          mq.put('{"message":"ice"}')
       elif random.random() < new_chance and (not runners or runners[-1][0] > 0):
         runners.append([0,random.randint(0,255),random.randint(0,255),random.randint(0,255)])
       time.sleep(wait_ms/1000.0)
       led_step(strip, runners)
 
     if not mq.empty():
-      message = mq.get()
+      try:
+        message = mq.get()
+        message = json.loads(message)
+      except:
+        pass
 
-    if message == "stop":
-      run = False
-    elif message == "pause":
-      run = not run
-    elif message == "start" or message == "on" or message == "play":
-      run = True
-    elif message == "off":
-      run = False
-      strip.setBrightness(0)
-      strip.show()
-    elif message == "fire":
-      g = range(0,256,256/streak_length)
-      for x in range(0, streak_length):
-        runners.append([-x, 255, g[x], 0])
-    elif message == "ice":
-      g = range(0,256,256/streak_length)
-      for x in range(0, streak_length):
-        runners.append([-x, 0, g[x], 255])
-    elif message == "quit":
-      strip.setBrightness(0)
-      strip.show()
-      return
+    if 'message' in message:
+      if message['message'] == "stop":
+        run = False
+      elif message['message'] == "pause":
+        print "pausing"
+        run = not run
+      elif message['message'] == "start" or message['message'] == "on" or message['message'] == "play":
+        run = True
+      elif message['message'] == "off":
+        run = False
+        strip.setBrightness(0)
+        strip.show()
+      elif message['message'] == "fire":
+        g = range(0,256,256/streak_length)
+        for x in range(0, streak_length):
+          runners.append([-x, 255, g[x], 0])
+      elif message['message'] == "ice":
+        g = range(0,256,256/streak_length)
+        for x in range(0, streak_length):
+          runners.append([-x, 0, g[x], 255])
+      elif message['message'] == "quit":
+        strip.setBrightness(0)
+        strip.show()
+        return
     
-    wait_input = re.match('^wait \d+$', message)
-    chance_input = re.match('^chance 0\.\d+$', message)
-    streak_chance_input = re.match('^streakc 0\.\d+$', message)
-    streak_input = re.match('^streak \d+$', message)
-    if wait_input:
-      wait_ms = float(re.findall('\d+', message)[0])
-    elif chance_input:
-      new_chance = float(re.findall('0\.\d+', message)[0])
-    elif streak_chance_input:
-      streak_chance = float(re.findall('0\.\d+', message)[0])
-    elif streak_input:
-      streak_length = int(re.findall('\d+', message)[0])
+    if 'wait_input' in message:
+        wait_ms = message['wait_ms']
+    if 'new_change' in message:
+        new_chance = message['new_chance']
+    if 'streak_chance' in message:
+        streak_chance = message['streak_chance']
+    if 'streak_length' in message:
+        streak_length = message['streak_length']
 
-    message = ''
+    message = {}
 
 def server(environ, start_response):
     path = environ.get('PATH_INFO', '').lstrip('/')

@@ -15,8 +15,8 @@
   <br>
   <br>
   <br><input id="rslider" type="range" name="red"   min="0" max="255" value="255" onchange="rChange(this)"> red
-  <br><input id="gslider" type="range" name="green" min="0" max="255" value="255" onchange="gChange(this)"> blue
-  <br><input id="bslider" type="range" name="blue"  min="0" max="255" value="255" onchange="bChange(this)"> green
+  <br><input id="gslider" type="range" name="green" min="0" max="255" value="255" onchange="gChange(this)"> green
+  <br><input id="bslider" type="range" name="blue"  min="0" max="255" value="255" onchange="bChange(this)"> blue
 </form>
 <p>
 <canvas id="canvas"></canvas>
@@ -32,12 +32,16 @@ function gChange(slider) { g = slider.value; }
 function bChange(slider) { b = slider.value; }
 
 function sendValue(name, value){
-  console.log('msg to websocket: ' + name + ' ' + value);
-  ws.send(name + ' ' + value);
+  var data = {}
+  data[name] = value;
+  console.log('msg to websocket: ' + JSON.stringify(data));
+  ws.send(JSON.stringify(data));
 }
 function sendMessage(msg){
-  console.log('msg to websocket: ' + msg);
-  ws.send(msg);
+  var data = {}
+  data['message'] = msg;
+  console.log('msg to websocket: ' + JSON.stringify(data));
+  ws.send(JSON.stringify(data));
 }
 function sketchProc(processing) {
   processing.size(50,755);
