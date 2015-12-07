@@ -197,7 +197,7 @@ if __name__ == '__main__':
 
   if args.use_websockets:
       print "Using websockets..."
-      srv = make_server('192.168.1.20', 9000, server_class=WSGIServer,
+      srv = make_server('192.168.1.120', 9000, server_class=WSGIServer,
                         handler_class=WebSocketWSGIRequestHandler,
                         app=WebSocketWSGIApplication(handler_cls=PiWebSocket))
       srv.initialize_websockets_manager()
@@ -210,14 +210,13 @@ if __name__ == '__main__':
   while thing != 'quit':
     thing = raw_input('Send message: ')
     mq.put(thing)
-    if thing == 'hello':
-      for c in connections:
-        try:
-          print "Sending message..."
-          c.send('hello')
-        except:
-          print "Connection missing, removing..."
-          connections.remove(c)
+    for c in connections:
+      try:
+        print "Sending message..."
+        c.send(thing)
+      except:
+        print "Connection missing, removing..."
+        connections.remove(c)
 
 
   print 'Closing painter...'
