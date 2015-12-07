@@ -3,18 +3,31 @@
   <script src="js/processing.js"></script>
 </head>
 <body>
+<form>
+  red:   <input id="rslider" type="range" name="red"   min="0" max="255" value="255" onchange="rChange(this)">
+  green: <input id="gslider" type="range" name="green" min="0" max="255" value="255" onchange="gChange(this)">
+  blue:  <input id="bslider" type="range" name="blue"  min="0" max="255" value="255" onchange="bChange(this)">
+</form>
 <p>
 <canvas id="canvas"></canvas>
 </p>
 <script id="script1" type="text/javascript">
 
+var r =   0;
+var g =   0;
+var b =   0;
+
+function rChange(slider) { r = slider.value; }
+function gChange(slider) { g = slider.value; }
+function bChange(slider) { b = slider.value; }
+
 function sketchProc(processing) {
   processing.size(50,755);
 
   var wsUri = "ws://192.168.1.3:9000";
-  var r =   0;
-  var g =   0;
-  var b =   0;
+  rChange(document.getElementById("rslider"));
+  gChange(document.getElementById("gslider"));
+  bChange(document.getElementById("bslider"));
 
   ws = new WebSocket(wsUri);
   ws.onopen    = function(evt) { onOpen(evt)    };
