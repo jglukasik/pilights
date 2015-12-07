@@ -4,9 +4,19 @@
 </head>
 <body>
 <form>
-  red:   <input id="rslider" type="range" name="red"   min="0" max="255" value="255" onchange="rChange(this)">
-  green: <input id="gslider" type="range" name="green" min="0" max="255" value="255" onchange="gChange(this)">
-  blue:  <input id="bslider" type="range" name="blue"  min="0" max="255" value="255" onchange="bChange(this)">
+  <br><button id="firebut" type="button" name="fire" onclick="sendMessage('fire')"> fire </button>
+  <br><button id="icebut" type="button" name="ice" onclick="sendMessage('ice')"> ice </button>
+  <br><button id="pausebut" type="button" name="pause" onclick="sendMessage('pause')"> pause </button>
+  <br><button id="offbut" type="button" name="off" onclick="sendMessage('off')"> off </button>
+  <br><input id="randomslider" type="range" name="chance" min="0" max="1" value="0.5" step="0.05" onchange="sendValue(this.name, this.value)"> dot chance
+  <br><input id="streakslider" type="range" name="streakc" min="0" max="1" value="0.5" step="0.005" onchange="sendValue(this.name, this.value)"> streak chance
+  <br>
+  <br>
+  <br>
+  <br>
+  <br><input id="rslider" type="range" name="red"   min="0" max="255" value="255" onchange="rChange(this)"> red
+  <br><input id="gslider" type="range" name="green" min="0" max="255" value="255" onchange="gChange(this)"> blue
+  <br><input id="bslider" type="range" name="blue"  min="0" max="255" value="255" onchange="bChange(this)"> green
 </form>
 <p>
 <canvas id="canvas"></canvas>
@@ -21,6 +31,14 @@ function rChange(slider) { r = slider.value; }
 function gChange(slider) { g = slider.value; }
 function bChange(slider) { b = slider.value; }
 
+function sendValue(name, value){
+  console.log('msg to websocket: ' + name + ' ' + value);
+  ws.send(name + ' ' + value);
+}
+function sendMessage(msg){
+  console.log('msg to websocket: ' + msg);
+  ws.send(msg);
+}
 function sketchProc(processing) {
   processing.size(50,755);
 
@@ -45,9 +63,6 @@ function sketchProc(processing) {
 
   function onMessage(evt) {
     console.log("resp: " + evt.data);
-    if (evt.data === "fire"){
-      r = 255;
-    }
   }
 
   function onError(evt) {
@@ -65,9 +80,6 @@ function sketchProc(processing) {
 var canvas = document.getElementById("canvas");
 var p = new Processing(canvas, sketchProc);
 
-//var ctx = canvas.getContext("2d");
-//ctx.fillStyle = "green";
-//ctx.fillRect(10,10,100,300);
 </script>
 </body>
 </html>
