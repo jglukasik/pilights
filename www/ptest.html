@@ -8,8 +8,8 @@
   <br><button id="icebut" type="button" name="ice" onclick="sendMessage('ice')"> ice </button>
   <br><button id="pausebut" type="button" name="pause" onclick="sendMessage('pause')"> pause </button>
   <br><button id="offbut" type="button" name="off" onclick="sendMessage('off')"> off </button>
-  <br><input id="randomslider" type="range" name="chance" min="0" max="1" value="0.5" step="0.05" onchange="sendValue(this.name, this.value)"> dot chance
-  <br><input id="streakslider" type="range" name="streakc" min="0" max="1" value="0.5" step="0.005" onchange="sendValue(this.name, this.value)"> streak chance
+  <br><input id="randomslider" type="range" name="dot_chance" min="0" max="1" value="0.5" step="0.05" onchange="sendValue(this.name, this.value)"> dot chance
+  <br><input id="streakslider" type="range" name="streak_chance" min="0" max="1" value="0.5" step="0.005" onchange="sendValue(this.name, this.value)"> streak chance
   <br>
   <br>
   <br>
@@ -46,7 +46,7 @@ function sendMessage(msg){
 function sketchProc(processing) {
   processing.size(50,755);
 
-  var wsUri = "ws://192.168.1.3:9000";
+  var wsUri = "ws://192.168.1.120:9000";
   rChange(document.getElementById("rslider"));
   gChange(document.getElementById("gslider"));
   bChange(document.getElementById("bslider"));

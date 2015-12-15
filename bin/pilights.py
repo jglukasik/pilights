@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import argparse
 import random
 import signal
@@ -73,7 +74,7 @@ def led_step(strip, runners):
 def painter():
 
   wait_ms = 70
-  new_chance = 0.0
+  dot_chance = 0.0
   streak_chance = 0.0
   streak_length = 20
   run = True
@@ -86,7 +87,7 @@ def painter():
           mq.put('{"message":"fire"}')
         else:
           mq.put('{"message":"ice"}')
-      elif random.random() < new_chance and (not runners or runners[-1][0] > 0):
+      elif random.random() < dot_chance and (not runners or runners[-1][0] > 0):
         runners.append([0,random.randint(0,255),random.randint(0,255),random.randint(0,255)])
       time.sleep(wait_ms/1000.0)
       led_step(strip, runners)
@@ -123,10 +124,13 @@ def painter():
         strip.show()
         return
     
+    if 'message' in message:
+        print 'got_message'
     if 'wait_input' in message:
         wait_ms = message['wait_ms']
-    if 'new_change' in message:
-        new_chance = message['new_chance']
+    if 'dot_chance' in message:
+        print 'changing'
+        dot_chance = message['dot_chance']
     if 'streak_chance' in message:
         streak_chance = message['streak_chance']
     if 'streak_length' in message:
