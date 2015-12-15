@@ -7,6 +7,7 @@ import threading
 import time
 import urlparse
 import json
+import os
 
 from Queue import Queue
 from wsgiref.simple_server import make_server
@@ -32,8 +33,13 @@ class PiWebSocket(WebSocket):
   def received_message(self, message):
     print message
     mq.put(str(message))
+  def handshake_ok(self):
+    print "Handshake ok"
   def opened(self):
+    print "Opening, adding to connections"
     connections.append(self)
+  def closed(self, code, reason=None):
+    print "Closed down", code, reason
 
 class dummy_strip:
   def setBrightness(self, brightness):
@@ -53,7 +59,9 @@ def hex_to_rgb(value):
 
 # Handle ctrl-c
 def signal_handler(signal, frame):
-  print('Exiting...')
+  print('Exiting pilights...')
+  os.remove('/var/run/pilights.pid')
+  srv.server_close()
   sys.exit(0)
 
 # Advance each of the runner dots on the strip forward one step
@@ -171,7 +179,7 @@ def server(environ, start_response):
 if __name__ == '__main__':
 
   parser = argparse.ArgumentParser(description="Flash some LEDs")
-  parser.add_argument( '-w', action='store_true', dest='use_websockets')
+  parser.add_argument( '-q', action='store_true', dest='quiet_websockets')
   parser.add_argument( '-s', action='store_true', dest='use_server')
   parser.add_argument( '-d', action='store_true', dest='dry_run')
   args = parser.parse_args()
@@ -186,6 +194,7 @@ if __name__ == '__main__':
     strip.begin()
 
   signal.signal(signal.SIGINT, signal_handler)
+  signal.signal(signal.SIGTERM, signal_handler)
 
   p = threading.Thread(target=painter)
   p.daemon = True
@@ -201,15 +210,16 @@ if __name__ == '__main__':
     s.daemon = True
     s.start()
 
-  if args.use_websockets:
-      print "Using websockets..."
-      srv = make_server('192.168.1.120', 9000, server_class=WSGIServer,
-                        handler_class=WebSocketWSGIRequestHandler,
-                        app=WebSocketWSGIApplication(handler_cls=PiWebSocket))
-      srv.initialize_websockets_manager()
-      s = threading.Thread(target=lambda: srv.serve_forever())
-      s.daemon = True
-      s.start()
+  if not args.quiet_websockets:
+
+    print "Using websockets..."
+    srv = make_server('192.168.1.120', 9000, server_class=WSGIServer,
+                      handler_class=WebSocketWSGIRequestHandler,
+                      app=WebSocketWSGIApplication(handler_cls=PiWebSocket))
+    srv.initialize_websockets_manager()
+    s = threading.Thread(target=lambda: srv.serve_forever())
+    s.daemon = True
+    s.start()
 
 
   thing = ''
