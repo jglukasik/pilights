@@ -7,7 +7,7 @@ DIR="/home/pi/pilights/"
 cp "$DIR/bin/pilights.py" /usr/sbin/pilights
 
 # Install web server
-cp -r "$DIR/www/" /var/www/pilights
+cp -r "$DIR/www/" /var/www/frontend
 
 # Install init script
 cp "$DIR/etc/pilights" /etc/init.d/pilights
