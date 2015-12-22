@@ -60,7 +60,7 @@ def hex_to_rgb(value):
 # Handle ctrl-c
 def signal_handler(signal, frame):
   print('Exiting pilights...')
-  os.remove('/var/run/pilights.pid')
+  #os.remove('/var/run/pilights.pid')
   srv.server_close()
   sys.exit(0)
 
@@ -90,7 +90,7 @@ def painter():
   message = {}
   while True:
     if run:
-      if random.random() < streak_chance:
+      if random.random() < streak_chance and (not runners or runners[-1][0] > 0):
         if random.random() < 0.5:
           mq.put('{"message":"fire"}')
         else:
@@ -133,16 +133,15 @@ def painter():
         return
     
     if 'message' in message:
-        print 'got_message'
+        print 'Got message: ', message
     if 'wait_input' in message:
-        wait_ms = message['wait_ms']
+        wait_ms = float(message['wait_ms'])
     if 'dot_chance' in message:
-        print 'changing'
-        dot_chance = message['dot_chance']
+        dot_chance = float(message['dot_chance'])
     if 'streak_chance' in message:
-        streak_chance = message['streak_chance']
+        streak_chance = float(message['streak_chance'])
     if 'streak_length' in message:
-        streak_length = message['streak_length']
+        streak_length = int(message['streak_length'])
 
     message = {}
 
@@ -220,6 +219,7 @@ if __name__ == '__main__':
     s = threading.Thread(target=lambda: srv.serve_forever())
     s.daemon = True
     s.start()
+    print "Websocket started."
 
 
   thing = ''
