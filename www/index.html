@@ -11,9 +11,12 @@
   <br><button id="icebut" type="button" name="ice" onclick="sendMessage('ice')"> ice </button>
   <br><button id="pausebut" type="button" name="pause" onclick="sendMessage('pause')"> pause </button>
   <br><button id="offbut" type="button" name="off" onclick="sendMessage('off')"> off </button>
-  <br><input id="randomslider" type="range" name="dot_chance" min="0" max="1" value="0.5" step="0.05" onchange="sendValue(this.name, this.value)"> dot chance
+  <br><button id="tailbut" type="button" name="off" onclick="sendMessage('tail')"> tail </button>
+  <br><input id="randomslider" type="range" name="dot_chance" min="0" max="1" value="0.0" step="0.05" onchange="sendValue(this.name, this.value)"> dot chance
   <br><input id="streakslider" type="range" name="streak_chance" min="0" max="0.3" value="0.0" step="0.001" onchange="sendValue(this.name, this.value)"> streak chance
   <br><input id="lengthslider" type="range" name="streak_length" min="0" max="200" value="20" step="1" onchange="sendValue(this.name, this.value)"> streak length
+  <br><input id="brightslider" type="range" name="brightness" min="0" max="250" value="100" step="1" onchange="sendValue(this.name, this.value)"> brightness
+  <br><input id="waitslider" type="range" name="wait_input" min="0" max="200" value="70" step="1" onchange="sendValue(this.name, this.value)"> waittime 
   <br>
   <br>
   <br>

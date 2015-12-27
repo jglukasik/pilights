@@ -17,7 +17,7 @@ from ws4py.server.wsgirefserver import WSGIServer, WebSocketWSGIRequestHandler
 from ws4py.server.wsgiutils import WebSocketWSGIApplication
 
 # LED strip configuration:
-LED_COUNT      = 150      # Number of LED pixels.
+LED_COUNT      = 450      # Number of LED pixels.
 LED_PIN        = 18      # GPIO pin connected to the pixels (must support PWM!).
 LED_FREQ_HZ    = 800000  # LED signal frequency in hertz (usually 800khz)
 LED_DMA        = 5       # DMA channel to use for generating signal (try 5)
@@ -28,6 +28,7 @@ LED_INVERT     = False   # True to invert the signal (when using NPN transistor 
 mq = Queue()
 runners = []
 connections = []
+tail_length = 91
 
 class PiWebSocket(WebSocket):
   def received_message(self, message):
@@ -65,13 +66,16 @@ def signal_handler(signal, frame):
   sys.exit(0)
 
 # Advance each of the runner dots on the strip forward one step
-def led_step(strip, runners):
+def led_step(strip, runners, brightness, tail):
   for i in range(strip.numPixels()):
     strip.setPixelColorRGB(i,100,100,100)
   for r in runners:
     if r[0] >= 0:
       strip.setPixelColorRGB(*r)
-  strip.setBrightness(60)
+  strip.setBrightness(brightness)
+  if not tail:
+    for i in range(tail_length):
+      strip.setPixelColorRGB(i,0,0,0)
   strip.show()
   last_runner = runners[-1:]
   for r in runners:
@@ -85,6 +89,8 @@ def painter():
   dot_chance = 0.0
   streak_chance = 0.0
   streak_length = 20
+  brightness = 100
+  tail = False
   run = True
 
   message = {}
@@ -98,7 +104,7 @@ def painter():
       elif random.random() < dot_chance and (not runners or runners[-1][0] > 0):
         runners.append([0,random.randint(0,255),random.randint(0,255),random.randint(0,255)])
       time.sleep(wait_ms/1000.0)
-      led_step(strip, runners)
+      led_step(strip, runners, brightness, tail)
 
     if not mq.empty():
       try:
@@ -119,6 +125,8 @@ def painter():
         run = False
         strip.setBrightness(0)
         strip.show()
+      elif message['message'] == "tail":
+        tail = not tail
       elif message['message'] == "fire":
         g = range(0,256,256/streak_length)
         for x in range(0, streak_length):
@@ -135,13 +143,15 @@ def painter():
     if 'message' in message:
         print 'Got message: ', message
     if 'wait_input' in message:
-        wait_ms = float(message['wait_ms'])
+        wait_ms = float(message['wait_input'])
     if 'dot_chance' in message:
         dot_chance = float(message['dot_chance'])
     if 'streak_chance' in message:
         streak_chance = float(message['streak_chance'])
     if 'streak_length' in message:
         streak_length = int(message['streak_length'])
+    if 'brightness' in message:
+        brightness = int(message['brightness'])
 
     message = {}
 
