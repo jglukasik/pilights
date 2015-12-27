@@ -66,9 +66,10 @@ def signal_handler(signal, frame):
   sys.exit(0)
 
 # Advance each of the runner dots on the strip forward one step
-def led_step(strip, runners, brightness, tail):
+def led_step(strip, runners, brightness, tail, color):
+  (r,g,b) = map(int, color)
   for i in range(strip.numPixels()):
-    strip.setPixelColorRGB(i,100,100,100)
+    strip.setPixelColorRGB(i,r,g,b)
   for r in runners:
     if r[0] >= 0:
       strip.setPixelColorRGB(*r)
@@ -91,6 +92,7 @@ def painter():
   streak_length = 20
   brightness = 100
   tail = False
+  color = (255,255,255)
   run = True
 
   message = {}
@@ -104,7 +106,7 @@ def painter():
       elif random.random() < dot_chance and (not runners or runners[-1][0] > 0):
         runners.append([0,random.randint(0,255),random.randint(0,255),random.randint(0,255)])
       time.sleep(wait_ms/1000.0)
-      led_step(strip, runners, brightness, tail)
+      led_step(strip, runners, brightness, tail, color)
 
     if not mq.empty():
       try:
@@ -152,6 +154,8 @@ def painter():
         streak_length = int(message['streak_length'])
     if 'brightness' in message:
         brightness = int(message['brightness'])
+    if 'color' in  message:
+        color = message['color']
 
     message = {}
 
