@@ -1,11 +1,13 @@
 <html>
 <head>
   <script src="js/processing.js"></script>
+  <script src="js/jscolor.js"></script>
 </head>
 <body>
 <p>
 <canvas id="socket" width="40" height="20"></canvas>
 </p>
+Color: <input class="jscolor" onchange="pickerUpdate(this)" value="ffffff">
 <form>
   <br><button id="flickerbut" type="button" name="color" onclick="sendMessage('fire_effect')"> flicker </button>
   <br><button id="colorbut" type="button" name="color" onclick="sendColor()"> color </button>
@@ -89,6 +91,13 @@ function onMessage(evt) {
 
 function onError(evt) {
   console.log("error: " + evt.data);
+}
+
+function pickerUpdate(picker) {
+  r = picker.jscolor.rgb[0];
+  g = picker.jscolor.rgb[1];
+  b = picker.jscolor.rgb[2];
+  sendColor();
 }
 
 function sendColor(){
