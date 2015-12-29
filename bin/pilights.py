@@ -66,8 +66,13 @@ def signal_handler(signal, frame):
   sys.exit(0)
 
 # Advance each of the runner dots on the strip forward one step
-def led_step(strip, runners, brightness, tail, color):
+def led_step(strip, runners, brightness, tail, color, fire_effect):
   (r,g,b) = map(int, color)
+  if fire_effect:
+    (r,g,b) = map(lambda x: x - random.randint(0,150), (255,135,40))
+    (r,g,b) = map(lambda x: 0 if x < 0 else x, (r,g,b))
+    # print r, ' ', g, ' ', b
+    color = (r,g,b)
   for i in range(strip.numPixels()):
     strip.setPixelColorRGB(i,r,g,b)
   for r in runners:
@@ -93,6 +98,7 @@ def painter():
   brightness = 100
   tail = False
   color = (255,255,255)
+  fire_effect = False
   run = True
 
   message = {}
@@ -105,8 +111,11 @@ def painter():
           mq.put('{"message":"ice"}')
       elif random.random() < dot_chance and (not runners or runners[-1][0] > 0):
         runners.append([0,random.randint(0,255),random.randint(0,255),random.randint(0,255)])
-      time.sleep(wait_ms/1000.0)
-      led_step(strip, runners, brightness, tail, color)
+      led_step(strip, runners, brightness, tail, color, fire_effect)
+      if fire_effect:
+        time.sleep(random.randint(400,700)/1000.0)
+      else:
+        time.sleep(wait_ms/1000.0)
 
     if not mq.empty():
       try:
@@ -129,6 +138,8 @@ def painter():
         strip.show()
       elif message['message'] == "tail":
         tail = not tail
+      elif message['message'] == "fire_effect":
+        fire_effect = not fire_effect
       elif message['message'] == "fire":
         g = range(0,256,256/streak_length)
         for x in range(0, streak_length):
