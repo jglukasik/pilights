@@ -7,21 +7,25 @@
 <canvas id="socket" width="40" height="20"></canvas>
 </p>
 <form>
+  <br><button id="flickerbut" type="button" name="color" onclick="sendMessage('fire_effect')"> flicker </button>
+  <br><button id="colorbut" type="button" name="color" onclick="sendColor()"> color </button>
+  <br><input id="rslider" type="range" name="red"   min="0" max="255" value="0" onchange="rChange(this)"> red
+  <br><input id="gslider" type="range" name="green" min="0" max="255" value="0" onchange="gChange(this)"> green
+  <br><input id="bslider" type="range" name="blue"  min="0" max="255" value="0" onchange="bChange(this)"> blue
+  <br>
+  <br><input id="brightslider" type="range" name="brightness" min="0" max="250" value="100" step="1" onchange="sendValue(this.name, this.value)"> brightness
+  <br><button id="offbut" type="button" name="off" onclick="sendMessage('off')"> off </button>
+  <br>
+  <br><button id="tailbut" type="button" name="off" onclick="sendMessage('tail')"> tail </button>
+  <br>
+  <br><input id="randomslider" type="range" name="dot_chance" min="0" max="1" value="0.0" step="0.05" onchange="sendValue(this.name, this.value)"> dot chance
+  <br><input id="streakslider" type="range" name="streak_chance" min="0" max="0.3" value="0.0" step="0.001" onchange="sendValue(this.name, this.value)"> streak chance
+  <br><input id="lengthslider" type="range" name="streak_length" min="1" max="200" value="20" step="1" onchange="sendValue(this.name, this.value)"> streak length
   <br><button id="firebut" type="button" name="fire" onclick="sendMessage('fire')"> fire </button>
   <br><button id="icebut" type="button" name="ice" onclick="sendMessage('ice')"> ice </button>
   <br><button id="pausebut" type="button" name="pause" onclick="sendMessage('pause')"> pause </button>
-  <br><button id="offbut" type="button" name="off" onclick="sendMessage('off')"> off </button>
-  <br><button id="tailbut" type="button" name="off" onclick="sendMessage('tail')"> tail </button>
-  <br><input id="randomslider" type="range" name="dot_chance" min="0" max="1" value="0.0" step="0.05" onchange="sendValue(this.name, this.value)"> dot chance
-  <br><input id="streakslider" type="range" name="streak_chance" min="0" max="0.3" value="0.0" step="0.001" onchange="sendValue(this.name, this.value)"> streak chance
-  <br><input id="lengthslider" type="range" name="streak_length" min="0" max="200" value="20" step="1" onchange="sendValue(this.name, this.value)"> streak length
-  <br><input id="brightslider" type="range" name="brightness" min="0" max="250" value="100" step="1" onchange="sendValue(this.name, this.value)"> brightness
   <br><input id="waitslider" type="range" name="wait_input" min="0" max="200" value="70" step="1" onchange="sendValue(this.name, this.value)"> waittime 
   <br>
-  <br><button id="colorbut" type="button" name="color" onclick="sendColor()"> color </button>
-  <br><input id="rslider" type="range" name="red"   min="0" max="255" value="255" onchange="rChange(this)"> red
-  <br><input id="gslider" type="range" name="green" min="0" max="255" value="255" onchange="gChange(this)"> green
-  <br><input id="bslider" type="range" name="blue"  min="0" max="255" value="255" onchange="bChange(this)"> blue
 </form>
 <p>
 
@@ -35,9 +39,9 @@ socketStatus.fillStyle = "rgb(255,0,0)";
 socketStatus.fillRect(0,0,200,50);
 
 function changeBG() { document.body.style.backgroundColor = 'rgb(' + r + ',' + g + ',' + b + ')'; }
-function rChange(slider) { r = slider.value; changeBG();}
-function gChange(slider) { g = slider.value; changeBG();}
-function bChange(slider) { b = slider.value; changeBG();}
+function rChange(slider) { r = slider.value; changeBG(); sendColor(); }
+function gChange(slider) { g = slider.value; changeBG(); sendColor(); }
+function bChange(slider) { b = slider.value; changeBG(); sendColor(); }
 
 var wsUri = "ws://192.168.1.120:9000";
 
@@ -46,6 +50,26 @@ ws.onopen    = function(evt) { onOpen(evt)    };
 ws.onclose   = function(evt) { onClose(evt)   };
 ws.onmessage = function(evt) { onMessage(evt) };
 ws.onerror   = function(evt) { onError(evt)   };
+
+function changeFavicon(color) {
+  var canvas = document.createElement('canvas');
+  canvas.width  = 16;
+  canvas.height = 16;
+  var ctx = canvas.getContext('2d');
+  var color = "rgb(" + r + "," + g + "," + b + ")";
+  console.log(color);
+  ctx.fillStyle = color;
+  ctx.fillRect(0,0,16,16);
+  var link = document.createElement('link');
+  link.id   = 'dynamic-favicon';
+  link.rel  = 'icon';
+  link.href = canvas.toDataURL("image/x-icon");
+  var oldLink = document.getElementById('dynamic-favicon');
+  if (oldLink) {
+    document.getElementsByTagName('head')[0].removeChild(oldLink);
+  }
+  document.getElementsByTagName('head')[0].appendChild(link);
+}
 
 function onOpen(evt) {
   console.log("Websocket opened");
@@ -73,6 +97,7 @@ function sendColor(){
   data['color'] = color;
   console.log('sending color: ' + color);
   ws.send(JSON.stringify(data));
+  changeFavicon(color);
 }
 
 function sendValue(name, value){
