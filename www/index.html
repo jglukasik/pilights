@@ -58,7 +58,7 @@ function changeFavicon(color) {
   canvas.width  = 16;
   canvas.height = 16;
   var ctx = canvas.getContext('2d');
-  var color = "rgb(" + r + "," + g + "," + b + ")";
+  var color = "rgb(" + Math.floor(r) + "," + Math.floor(g) + "," + Math.floor(b) + ")";
   console.log(color);
   ctx.fillStyle = color;
   ctx.fillRect(0,0,16,16);
