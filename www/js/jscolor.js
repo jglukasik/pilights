@@ -531,14 +531,16 @@ var jsc = {
 
 		if (target._jscLinkedInstance) {
 			if (target._jscLinkedInstance.showOnClick) {
-				target._jscLinkedInstance.show();
+				// target._jscLinkedInstance.show();
+        // jgl: only show picker if connected
 			}
 		} else if (target._jscControlName) {
 			jsc.onControlPointerStart(e, target, target._jscControlName, 'mouse');
 		} else {
 			// Mouse is outside the picker controls -> hide the color picker!
 			if (jsc.picker && jsc.picker.owner) {
-				jsc.picker.owner.hide();
+				// jsc.picker.owner.hide();
+        // jgl: dont hide the picker if we are connected
 			}
 		}
 	},
@@ -550,13 +552,15 @@ var jsc = {
 
 		if (target._jscLinkedInstance) {
 			if (target._jscLinkedInstance.showOnClick) {
-				target._jscLinkedInstance.show();
+				// target._jscLinkedInstance.show();
+        // jgl: only show picker if connected
 			}
 		} else if (target._jscControlName) {
 			jsc.onControlPointerStart(e, target, target._jscControlName, 'touch');
 		} else {
 			if (jsc.picker && jsc.picker.owner) {
-				jsc.picker.owner.hide();
+				// jsc.picker.owner.hide();
+        // jgl: dont hide the picker if we are connected
 			}
 		}
 	},

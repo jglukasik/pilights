@@ -1,35 +1,51 @@
 <html>
 <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>jgl[space]</title>
   <script src="js/processing.js"></script>
-  <script src="js/jscolor.js"></script>
+  <script src="js/jscolor.js"></script> 
+  <link rel="stylesheet" href="css/bootstrap.min.css" type="text/css"/>
 </head>
 <body>
-<p>
-<canvas id="socket" width="40" height="20"></canvas>
-</p>
-Color: <input class="jscolor" onchange="pickerUpdate(this)" value="ffffff">
-<form>
-  <br><button id="flickerbut" type="button" name="color" onclick="sendMessage('fire_effect')"> flicker </button>
-  <br><button id="colorbut" type="button" name="color" onclick="sendColor()"> color </button>
-  <br><input id="rslider" type="range" name="red"   min="0" max="255" value="0" onchange="rChange(this)"> red
-  <br><input id="gslider" type="range" name="green" min="0" max="255" value="0" onchange="gChange(this)"> green
-  <br><input id="bslider" type="range" name="blue"  min="0" max="255" value="0" onchange="bChange(this)"> blue
-  <br>
-  <br><input id="brightslider" type="range" name="brightness" min="0" max="250" value="100" step="1" onchange="sendValue(this.name, this.value)"> brightness
-  <br><button id="offbut" type="button" name="off" onclick="sendMessage('off')"> off </button>
-  <br>
-  <br><button id="tailbut" type="button" name="off" onclick="sendMessage('tail')"> tail </button>
-  <br>
-  <br><input id="randomslider" type="range" name="dot_chance" min="0" max="1" value="0.0" step="0.05" onchange="sendValue(this.name, this.value)"> dot chance
-  <br><input id="streakslider" type="range" name="streak_chance" min="0" max="0.3" value="0.0" step="0.001" onchange="sendValue(this.name, this.value)"> streak chance
-  <br><input id="lengthslider" type="range" name="streak_length" min="1" max="200" value="20" step="1" onchange="sendValue(this.name, this.value)"> streak length
-  <br><button id="firebut" type="button" name="fire" onclick="sendMessage('fire')"> fire </button>
-  <br><button id="icebut" type="button" name="ice" onclick="sendMessage('ice')"> ice </button>
-  <br><button id="pausebut" type="button" name="pause" onclick="sendMessage('pause')"> pause </button>
-  <br><input id="waitslider" type="range" name="wait_input" min="0" max="200" value="70" step="1" onchange="sendValue(this.name, this.value)"> waittime 
-  <br>
-</form>
-<p>
+<div class="container" role="main">
+  <div class="row span7 text-center">
+    <p>
+    </p>
+    jgl[space]
+    <p>
+    <p>
+    <input id="picker" class="jscolor" onchange="pickerUpdate(this)" value="ffffff"> select color
+    <div id="picker_placeholder" style="height:151px;"> 
+      . <p>
+      . <p>
+      connecting to websocket...
+      <p>
+      <canvas id="socket" width="40" height="20"></canvas>
+    </div>
+    <!--
+    testy texty test text
+    <br><button class="btn btn-primary" type="button" name="off" onclick="sendMessage('tail')"> tail </button>
+    <form>
+      <br><button id="flickerbut" type="button" name="color" onclick="sendMessage('fire_effect')"> flicker </button>
+      <br>
+      <br><input id="brightslider" type="range" name="brightness" min="0" max="250" value="100" step="1" onchange="sendValue(this.name, this.value)"> brightness
+      <br><button id="offbut" type="button" name="off" onclick="sendMessage('off')"> off </button>
+      <br>
+      <br>
+      <br><input id="randomslider" type="range" name="dot_chance" min="0" max="1" value="0.0" step="0.05" onchange="sendValue(this.name, this.value)"> dot chance
+      <br><input id="streakslider" type="range" name="streak_chance" min="0" max="0.3" value="0.0" step="0.001" onchange="sendValue(this.name, this.value)"> streak chance
+      <br><input id="lengthslider" type="range" name="streak_length" min="1" max="200" value="20" step="1" onchange="sendValue(this.name, this.value)"> streak length
+      <br><button class="btn btn-lg btn-primary" id="firebut" type="button" name="fire" onclick="sendMessage('fire')"> fire </button>
+      <br><button class="btn btn-lg btn-primary" id="icebut" type="button" name="ice" onclick="sendMessage('ice')"> ice </button>
+      <br><button class="btn btn-lg btn-primary" id="pausebut" type="button" name="pause" onclick="sendMessage('pause')"> pause </button>
+      <br><input id="waitslider" type="range" name="wait_input" min="0" max="200" value="70" step="1" onchange="sendValue(this.name, this.value)"> waittime 
+      <br>
+    </form>
+    -->
+    <p>
+  </div>
+</div>
 
 <script>
 var r =   0;
@@ -75,12 +91,14 @@ function changeFavicon(color) {
 
 function onOpen(evt) {
   console.log("Websocket opened");
+  document.getElementById('picker').jscolor.show();
   socketStatus.fillStyle = "rgb(0,255,0)";
   socketStatus.fillRect(0,0,200,50);
 }
 
 function onClose(evt) {
   console.log("Websocket closed");
+  document.getElementById('picker').jscolor.hide();
   socketStatus.fillStyle = "rgb(255,0,0)";
   socketStatus.fillRect(0,0,200,50);
 }
