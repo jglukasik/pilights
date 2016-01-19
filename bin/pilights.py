@@ -9,6 +9,7 @@ import urlparse
 import json
 import os
 
+from neopixel import *
 from Queue import Queue
 from wsgiref.simple_server import make_server
 from ws4py.websocket import WebSocket
@@ -41,22 +42,6 @@ class PiWebSocket(WebSocket):
     connections.append(self)
   def closed(self, code, reason=None):
     print "Closed down", code, reason
-
-class dummy_strip:
-  def setBrightness(self, brightness):
-    return
-  def numPixels(self):
-    return LED_COUNT
-  def setPixelColorRGB(self,n,r,g,b):
-    return
-  def show(self):
-    return
-
-# from http://stackoverflow.com/questions/214359/converting-hex-color-to-rgb-and-vice-versa
-def hex_to_rgb(value):
-  value = value.lstrip('#')
-  lv = len(value)
-  return tuple(int(value[i:i + lv // 3], 16) for i in range(0, lv, lv // 3))
 
 # Handle ctrl-c
 def signal_handler(signal, frame):
@@ -170,52 +155,16 @@ def painter():
 
     message = {}
 
-def server(environ, start_response):
-    path = environ.get('PATH_INFO', '').lstrip('/')
-    params = urlparse.parse_qs(environ.get('QUERY_STRING', ''))
-    msg = "intentionally left blank"
-
-    if path:
-      msg = path
-      mq.put(msg)
-
-    if 'msg' in params:
-      msg = params['msg'][0]
-      mq.put(msg)
-
-    start_response('200 OK', [('Content-Type', 'text/html')])
-    return ['''
-       <body style="font-size:xx-large">
-       <a href="http://pi.jgl.me/start" style="color:green">start</a>
-       <br>
-       <a href="http://pi.jgl.me/stop" style="color:yellow">stop</a>
-       <br>
-       <a href="http://pi.jgl.me/off" style="color:red">off</a>
-       <br>
-       <br>
-       <br>
-       <a href="http://pi.jgl.me/fire" style="color:orange">fire</a>
-       <br>
-       <a href="http://pi.jgl.me/ice" style="color:blue">ice</a>
-       </body>
-       ''' % {'msg': msg}]
-
 if __name__ == '__main__':
 
   parser = argparse.ArgumentParser(description="Flash some LEDs")
   parser.add_argument( '-q', action='store_true', dest='quiet_websockets')
-  parser.add_argument( '-s', action='store_true', dest='use_server')
   parser.add_argument( '-d', action='store_true', dest='dry_run')
   args = parser.parse_args()
 
-  if args.dry_run:
-    strip = dummy_strip()
-  else:
-    from neopixel import *
-
-    # Create and initialize NeoPixel object
-    strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS)
-    strip.begin()
+  # Create and initialize NeoPixel object
+  strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS)
+  strip.begin()
 
   signal.signal(signal.SIGINT, signal_handler)
   signal.signal(signal.SIGTERM, signal_handler)
@@ -226,13 +175,6 @@ if __name__ == '__main__':
 
   print "Welcome to piLights"
   print ""
-
-  if args.use_server:
-    print "Starting web server..."
-    srv = make_server('192.168.1.20', 80, server)
-    s = threading.Thread(target=lambda: srv.serve_forever())
-    s.daemon = True
-    s.start()
 
   if not args.quiet_websockets:
 
