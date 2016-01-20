@@ -22,7 +22,7 @@ LED_COUNT      = 450      # Number of LED pixels.
 LED_PIN        = 18      # GPIO pin connected to the pixels (must support PWM!).
 LED_FREQ_HZ    = 800000  # LED signal frequency in hertz (usually 800khz)
 LED_DMA        = 5       # DMA channel to use for generating signal (try 5)
-LED_BRIGHTNESS = 255     # Set to 0 for darkest and 255 for brightest
+LED_BRIGHTNESS = 240     # Set to 0 for darkest and 255 for brightest
 LED_INVERT     = False   # True to invert the signal (when using NPN transistor level shift)
 
 # Messaging queue for main input thread to communicate with led painter
@@ -51,7 +51,7 @@ def signal_handler(signal, frame):
   sys.exit(0)
 
 # Advance each of the runner dots on the strip forward one step
-def led_step(strip, runners, brightness, tail, color, fire_effect):
+def led_step(strip, runners, tail, color, fire_effect):
   (r,g,b) = map(int, color)
   if fire_effect:
     (r,g,b) = map(lambda x: x - random.randint(0,150), (255,135,40))
@@ -63,7 +63,7 @@ def led_step(strip, runners, brightness, tail, color, fire_effect):
   for r in runners:
     if r[0] >= 0:
       strip.setPixelColorRGB(*r)
-  strip.setBrightness(brightness)
+  strip.setBrightness(LED_BRIGHTNESS)
   if not tail:
     for i in range(tail_length):
       strip.setPixelColorRGB(i,0,0,0)
@@ -80,7 +80,6 @@ def painter():
   dot_chance = 0.0
   streak_chance = 0.0
   streak_length = 20
-  brightness = 100
   tail = False
   color = (255,255,255)
   fire_effect = False
@@ -96,7 +95,7 @@ def painter():
           mq.put('{"message":"ice"}')
       elif random.random() < dot_chance and (not runners or runners[-1][0] > 0):
         runners.append([0,random.randint(0,255),random.randint(0,255),random.randint(0,255)])
-      led_step(strip, runners, brightness, tail, color, fire_effect)
+      led_step(strip, runners, tail, color, fire_effect)
       if fire_effect:
         time.sleep(random.randint(400,700)/1000.0)
       else:
@@ -148,8 +147,6 @@ def painter():
         streak_chance = float(message['streak_chance'])
     if 'streak_length' in message:
         streak_length = int(message['streak_length'])
-    if 'brightness' in message:
-        brightness = int(message['brightness'])
     if 'color' in  message:
         color = message['color']
 
