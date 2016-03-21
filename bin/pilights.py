@@ -166,10 +166,6 @@ if __name__ == '__main__':
   signal.signal(signal.SIGINT, signal_handler)
   signal.signal(signal.SIGTERM, signal_handler)
 
-  p = threading.Thread(target=painter)
-  p.daemon = True
-  p.start()
-
   print "Welcome to piLights"
   print ""
 
@@ -181,27 +177,7 @@ if __name__ == '__main__':
                       app=WebSocketWSGIApplication(handler_cls=PiWebSocket))
     srv.initialize_websockets_manager()
     s = threading.Thread(target=lambda: srv.serve_forever())
-    s.daemon = True
     s.start()
     print "Websocket started."
 
-
-  thing = ''
-  while thing != 'quit':
-    thing = raw_input('Send message: ')
-    mq.put(thing)
-    for c in connections:
-      try:
-        print "Sending message..."
-        c.send(thing)
-      except:
-        print "Connection missing, removing..."
-        connections.remove(c)
-
-
-  print 'Closing painter...'
-  while p.isAlive():
-    pass
-
-  print 'Goodbye!'
-
+  painter()
