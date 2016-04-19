@@ -4,45 +4,43 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>jgl[space]</title>
   <script src="js/jscolor.js"></script> 
-  <link rel="stylesheet" href="css/bootstrap.min.css" type="text/css"/>
+  <style>
+    body {background-color: black; text-align: center; }
+    pre {color: white; font-size: 20px; background-color: black; display: inline-block; }
+  </style>
 </head>
+
 <body>
-<div class="container" role="main">
-  <div class="row span7 text-center">
-    <p>
-    </p>
-    jgl[space]
-    <p>
-    <p>
-    <input id="picker" class="jscolor" onchange="pickerUpdate(this)" value="640000"> select color
-    <div id="picker_placeholder" style="height:151px;"> 
-      . <p>
-      . <p>
-      connecting to websocket...
-      <p>
-      <canvas id="socket" width="40" height="20"></canvas>
-    </div>
-   <p>
-  </div>
+
+<pre>
+jgl[space]
+<input id="picker" class="jscolor" onchange="pickerUpdate(this)" value="640000">color
+<div id="picker_placeholder" style="height:151px;"> 
+  </pre>
 </div>
 
+</body>
+
+<script src="js/three.min.js"></script>
 <script>
-   <script src="js/three.min.js"></script>
-    <script>
 // initialize the stuffs
 var scene = new THREE.Scene();
-var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight
+var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeighti, 0.1, 100000);
 var renderer = new THREE.WebGLRenderer();
 renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
 
+render();
+
+function render() {
+  requestAnimationFrame( render );
+  renderer.render( scene, camera );
+}
+
+// start color picker/sender code
 var r =   0;
 var g =   0;
 var b =   0;
-
-var socketStatus = document.getElementById('socket').getContext('2d');
-socketStatus.fillStyle = "rgb(255,0,0)";
-socketStatus.fillRect(0,0,200,50);
 
 var wsUri = "ws://192.168.1.120:9000";
 
@@ -75,15 +73,11 @@ function changeFavicon(color) {
 function onOpen(evt) {
   console.log("Websocket opened");
   document.getElementById('picker').jscolor.show();
-  socketStatus.fillStyle = "rgb(0,255,0)";
-  socketStatus.fillRect(0,0,200,50);
 }
 
 function onClose(evt) {
   console.log("Websocket closed");
   document.getElementById('picker').jscolor.hide();
-  socketStatus.fillStyle = "rgb(255,0,0)";
-  socketStatus.fillRect(0,0,200,50);
 }
 
 function onMessage(evt) {
@@ -124,5 +118,4 @@ function sendMessage(msg){
   ws.send(JSON.stringify(data));
 }
 </script>
-</body>
 </html>
