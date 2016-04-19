@@ -25,16 +25,34 @@ jgl[space]
 <script>
 // initialize the stuffs
 var scene = new THREE.Scene();
-var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeighti, 0.1, 100000);
+var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / (window.innerHeight/2), 0.1, 100000);
 var renderer = new THREE.WebGLRenderer();
-renderer.setSize( window.innerWidth, window.innerHeight );
+renderer.setSize( window.innerWidth, window.innerHeight/2 );
 document.body.appendChild( renderer.domElement );
+var geometry = new THREE.CubeGeometry(10,10,7);
+var material = new THREE.MeshLambertMaterial( {color: 0x640000} );
+var cube = new THREE.Mesh( geometry, material );
+cube.doubleSided = true;
+scene.add(cube);
 
+// let there be light
+var light = new THREE.PointLight(0xffffff, 3, 50);
+light.position.set(2,10,10);
+scene.add(light);
+
+camera.position.set(10,10,10);
+camera.up = new THREE.Vector3(0,0,1);
+camera.lookAt(new THREE.Vector3(0,0,0));
+
+console.log(scene);
+console.log(new THREE.Box3().setFromObject(cube));
 render();
 
 function render() {
   requestAnimationFrame( render );
   renderer.render( scene, camera );
+
+  cube.rotation.z -= 0.01;
 }
 
 // start color picker/sender code
@@ -94,6 +112,12 @@ function pickerUpdate(picker) {
   g = picker.jscolor.rgb[1];
   b = picker.jscolor.rgb[2];
   sendColor();
+  colorCube();
+}
+
+function colorCube(){
+  cube.material.color.setRGB( r/256, g/256, b/256 );
+  console.log(cube);
 }
 
 function sendColor(){
