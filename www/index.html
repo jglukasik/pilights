@@ -15,7 +15,7 @@
     jgl[space]
     <p>
     <p>
-    <input id="picker" class="jscolor" onchange="pickerUpdate(this)" value="ffffff"> select color
+    <input id="picker" class="jscolor" onchange="pickerUpdate(this)" value="640000"> select color
     <div id="picker_placeholder" style="height:151px;"> 
       . <p>
       . <p>
@@ -23,27 +23,7 @@
       <p>
       <canvas id="socket" width="40" height="20"></canvas>
     </div>
-    <!--
-    testy texty test text
-    <br><button class="btn btn-primary" type="button" name="off" onclick="sendMessage('tail')"> tail </button>
-    <form>
-      <br><button id="flickerbut" type="button" name="color" onclick="sendMessage('fire_effect')"> flicker </button>
-      <br>
-      <br><input id="brightslider" type="range" name="brightness" min="0" max="250" value="100" step="1" onchange="sendValue(this.name, this.value)"> brightness
-      <br><button id="offbut" type="button" name="off" onclick="sendMessage('off')"> off </button>
-      <br>
-      <br>
-      <br><input id="randomslider" type="range" name="dot_chance" min="0" max="1" value="0.0" step="0.05" onchange="sendValue(this.name, this.value)"> dot chance
-      <br><input id="streakslider" type="range" name="streak_chance" min="0" max="0.3" value="0.0" step="0.001" onchange="sendValue(this.name, this.value)"> streak chance
-      <br><input id="lengthslider" type="range" name="streak_length" min="1" max="200" value="20" step="1" onchange="sendValue(this.name, this.value)"> streak length
-      <br><button class="btn btn-lg btn-primary" id="firebut" type="button" name="fire" onclick="sendMessage('fire')"> fire </button>
-      <br><button class="btn btn-lg btn-primary" id="icebut" type="button" name="ice" onclick="sendMessage('ice')"> ice </button>
-      <br><button class="btn btn-lg btn-primary" id="pausebut" type="button" name="pause" onclick="sendMessage('pause')"> pause </button>
-      <br><input id="waitslider" type="range" name="wait_input" min="0" max="200" value="70" step="1" onchange="sendValue(this.name, this.value)"> waittime 
-      <br>
-    </form>
-    -->
-    <p>
+   <p>
   </div>
 </div>
 
@@ -55,11 +35,6 @@ var b =   0;
 var socketStatus = document.getElementById('socket').getContext('2d');
 socketStatus.fillStyle = "rgb(255,0,0)";
 socketStatus.fillRect(0,0,200,50);
-
-function changeBG() { document.body.style.backgroundColor = 'rgb(' + r + ',' + g + ',' + b + ')'; }
-function rChange(slider) { r = slider.value; changeBG(); sendColor(); }
-function gChange(slider) { g = slider.value; changeBG(); sendColor(); }
-function bChange(slider) { b = slider.value; changeBG(); sendColor(); }
 
 var wsUri = "ws://192.168.1.120:9000";
 
@@ -109,6 +84,7 @@ function onMessage(evt) {
 
 function onError(evt) {
   console.log("error: " + evt.data);
+  document.body.style.backgroundColor = "red";
 }
 
 function pickerUpdate(picker) {
