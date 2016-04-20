@@ -29,24 +29,31 @@ var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / (window.innerH
 var renderer = new THREE.WebGLRenderer();
 renderer.setSize( window.innerWidth, window.innerHeight/2 );
 document.body.appendChild( renderer.domElement );
-var geometry = new THREE.CubeGeometry(10,10,7);
-var material = new THREE.MeshLambertMaterial( {color: 0x640000} );
-var cube = new THREE.Mesh( geometry, material );
-cube.doubleSided = true;
-scene.add(cube);
 
-// let there be light
-var light = new THREE.PointLight(0xffffff, 3, 50);
-light.position.set(2,10,10);
-scene.add(light);
+var cube, light;
+makeCube();
+letThereBeLight();
 
 camera.position.set(10,10,10);
 camera.up = new THREE.Vector3(0,0,1);
 camera.lookAt(new THREE.Vector3(0,0,0));
 
 console.log(scene);
-console.log(new THREE.Box3().setFromObject(cube));
 render();
+
+function makeCube() {
+  var geometry = new THREE.CubeGeometry(10,10,7);
+  var material = new THREE.MeshLambertMaterial( {color: 0x640000} );
+  cube = new THREE.Mesh( geometry, material );
+  console.log(new THREE.Box3().setFromObject(cube));
+  scene.add(cube);
+}
+
+function letThereBeLight(){
+  light = new THREE.PointLight(0xffffff, 3, 50);
+  light.position.set(2,10,10);
+  scene.add(light);
+}
 
 function render() {
   requestAnimationFrame( render );
