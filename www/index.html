@@ -29,6 +29,7 @@ jgl[space]
 var WIDTH  = window.innerWidth;
 var HEIGHT = window.innerHeight;
 
+var ws;
 var scene = new THREE.Scene();
 var camera = new THREE.PerspectiveCamera( 75, WIDTH / (HEIGHT), 0.1, 100000);
 var renderer = new THREE.WebGLRenderer();
@@ -40,7 +41,7 @@ var cubes = [];
 var light;
 var cubeCount = 33;
 var cubeContainerConstrainedToSideLengthOfThisNumber = 10;
-var mouse, raycaster;
+var mouse, raycaster, INTERSECTED;
 
 makeThisManyCubes(cubeCount);
 letThereBeLight();
@@ -53,15 +54,6 @@ camera.lookAt(new THREE.Vector3(0,0,0));
 console.log(scene);
 render();
 
-function drawRaycasterRay() {
-  var material = new THREE.LineBasicMaterial({color: 0x0000ff});
-  var geometry = new THREE.Geometry();
-  geometry.vertices.push(mouse);
-  geometry.vertices.push(camera);
-  var line = new THREE.Line(geometry, material);
-  scene.add(line);
-  console.log("added line");
-}
 function onMouseMove( event ) {
   event.preventDefault();
 
@@ -89,7 +81,10 @@ function makeCube() {
                    , randinRange(0,cubeContainerConstrainedToSideLengthOfThisNumber)
                    , randinRange(0,cubeContainerConstrainedToSideLengthOfThisNumber)
                    );
-  console.log(new THREE.Box3().setFromObject(cube));
+  cube.material.color.setRGB( Math.random() 
+                            , Math.random() 
+                            , Math.random() 
+                            );
   scene.add(cube);
   cubes.push(cube);
 }
@@ -98,6 +93,16 @@ function letThereBeLight(){
   light = new THREE.PointLight(0xffffff, 3, 50);
   light.position.set(2,10,10);
   scene.add(light);
+}
+
+function dealWithThisShit( touched ) {
+  if (ws && ws.readyState){
+    var scale = 100; //get somewhere between 0, 255
+    var r = touched.object.material.color.r*scale;
+    var g = touched.object.material.color.g*scale;
+    var b = touched.object.material.color.b*scale;
+    sendColor(r,g,b);
+  }
 }
 
 function render() {
@@ -111,9 +116,12 @@ function render() {
   raycaster.setFromCamera (mouse, camera);
   var intersects = raycaster.intersectObjects(scene.children);
 
-  for (var i = 0; i < intersects.length; i++){
-    intersects[i].object.material.color.set(0x0000ff);
-    drawRaycasterRay();
+  if (intersects.length > 0) {
+    if (INTERSECTED != intersects[0].object){
+      //make sphere
+      INTERSECTED = intersects[0].object;
+      dealWithThisShit(intersects[0]);
+    }
   }
 
   renderer.render( scene, camera );
@@ -158,12 +166,11 @@ function changeFavicon(color) {
 
 function onOpen(evt) {
   console.log("Websocket opened");
-  document.getElementById('picker').jscolor.show();
+  renderer.setClearColor(0x00ff00, 1);
 }
 
 function onClose(evt) {
   console.log("Websocket closed");
-  document.getElementById('picker').jscolor.hide();
 }
 
 function onMessage(evt) {
@@ -179,7 +186,7 @@ function pickerUpdate(picker) {
   red = picker.jscolor.rgb[0];
   green = picker.jscolor.rgb[1];
   blue = picker.jscolor.rgb[2];
-  sendColor(red,green,blue);
+  //sendColor(red,green,blue);
   colorCube();
 }
 
