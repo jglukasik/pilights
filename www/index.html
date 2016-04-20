@@ -12,27 +12,39 @@
 
 <body>
 
+<!--
 <pre>
 jgl[space]
 <input id="picker" class="jscolor" onchange="pickerUpdate(this)" value="640000">color
 <div id="picker_placeholder" style="height:151px;"> 
   </pre>
 </div>
+-->
 
 </body>
 
 <script src="js/three.min.js"></script>
 <script>
 // initialize the stuffs
-var scene = new THREE.Scene();
-var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / (window.innerHeight/2), 0.1, 100000);
-var renderer = new THREE.WebGLRenderer();
-renderer.setSize( window.innerWidth, window.innerHeight/2 );
-document.body.appendChild( renderer.domElement );
+var WIDTH  = window.innerWidth;
+var HEIGHT = window.innerHeight;
 
-var cube, light;
-makeCube();
+var scene = new THREE.Scene();
+var camera = new THREE.PerspectiveCamera( 75, WIDTH / (HEIGHT), 0.1, 100000);
+var renderer = new THREE.WebGLRenderer();
+renderer.setSize( WIDTH, HEIGHT );
+document.body.appendChild( renderer.domElement );
+window.addEventListener('mousemove', onMouseMove, false);
+
+var cubes = [];
+var light;
+var cubeCount = 33;
+var cubeContainerConstrainedToSideLengthOfThisNumber = 10;
+var mouse, raycaster;
+
+makeThisManyCubes(cubeCount);
 letThereBeLight();
+environmentalInteraction();
 
 camera.position.set(10,10,10);
 camera.up = new THREE.Vector3(0,0,1);
@@ -41,12 +53,45 @@ camera.lookAt(new THREE.Vector3(0,0,0));
 console.log(scene);
 render();
 
+function drawRaycasterRay() {
+  var material = new THREE.LineBasicMaterial({color: 0x0000ff});
+  var geometry = new THREE.Geometry();
+  geometry.vertices.push(mouse);
+  geometry.vertices.push(camera);
+  var line = new THREE.Line(geometry, material);
+  scene.add(line);
+  console.log("added line");
+}
+function onMouseMove( event ) {
+  event.preventDefault();
+
+  mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+  mouse.y = - ( event.clientY / window.innerHeight) * 2 + 1;
+}
+
+function environmentalInteraction() {
+  raycaster = new THREE.Raycaster();
+  mouse = new THREE.Vector2();
+}
+
+function makeThisManyCubes(okLetsMakeThisManyCubes){
+  for(var c=0; c<okLetsMakeThisManyCubes; c++){
+    makeCube();
+  }
+}
+
 function makeCube() {
-  var geometry = new THREE.CubeGeometry(10,10,7);
+  var cube;
+  var geometry = new THREE.CubeGeometry(1,1,1);
   var material = new THREE.MeshLambertMaterial( {color: 0x640000} );
   cube = new THREE.Mesh( geometry, material );
+  cube.position.set( randinRange(0,cubeContainerConstrainedToSideLengthOfThisNumber)
+                   , randinRange(0,cubeContainerConstrainedToSideLengthOfThisNumber)
+                   , randinRange(0,cubeContainerConstrainedToSideLengthOfThisNumber)
+                   );
   console.log(new THREE.Box3().setFromObject(cube));
   scene.add(cube);
+  cubes.push(cube);
 }
 
 function letThereBeLight(){
@@ -57,9 +102,25 @@ function letThereBeLight(){
 
 function render() {
   requestAnimationFrame( render );
-  renderer.render( scene, camera );
+  camera.updateMatrixWorld();
 
-  cube.rotation.z -= 0.01;
+  for(var i=0; i<cubes.length; i++){
+    cubes[i].rotation.z -= 0.01;
+  }
+
+  raycaster.setFromCamera (mouse, camera);
+  var intersects = raycaster.intersectObjects(scene.children);
+
+  for (var i = 0; i < intersects.length; i++){
+    intersects[i].object.material.color.set(0x0000ff);
+    drawRaycasterRay();
+  }
+
+  renderer.render( scene, camera );
+}
+
+function randinRange (min, max) {
+  return Math.random() * (max - min + 1) + min;
 }
 
 // start color picker/sender code
@@ -115,10 +176,10 @@ function onError(evt) {
 }
 
 function pickerUpdate(picker) {
-  r = picker.jscolor.rgb[0];
-  g = picker.jscolor.rgb[1];
-  b = picker.jscolor.rgb[2];
-  sendColor();
+  red = picker.jscolor.rgb[0];
+  green = picker.jscolor.rgb[1];
+  blue = picker.jscolor.rgb[2];
+  sendColor(red,green,blue);
   colorCube();
 }
 
@@ -127,7 +188,7 @@ function colorCube(){
   console.log(cube);
 }
 
-function sendColor(){
+function sendColor(r,g,b){
   var data = {};
   color = [r,g,b];
   data['color'] = color;
