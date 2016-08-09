@@ -172,7 +172,7 @@ if __name__ == '__main__':
   if not args.quiet_websockets:
 
     print "Using websockets..."
-    srv = make_server('192.168.1.120', 9000, server_class=WSGIServer,
+    srv = make_server('192.168.1.234', 9000, server_class=WSGIServer,
                       handler_class=WebSocketWSGIRequestHandler,
                       app=WebSocketWSGIApplication(handler_cls=PiWebSocket))
     srv.initialize_websockets_manager()
