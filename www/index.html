@@ -2,6 +2,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#ffffff">
   <title>jgl[space]</title>
   <script src="js/jscolor.js"></script> 
   <style>
@@ -12,40 +13,27 @@
 
 <body>
 
-<!--
 <pre>
-jgl[space]
-<input id="picker" class="jscolor" onchange="pickerUpdate(this)" value="640000">color
+jgl.space
+<input id="picker" class="jscolor" onchange="pickerUpdate(this)" value="640000">
 <div id="picker_placeholder" style="height:151px;"> 
   </pre>
 </div>
--->
 
 </body>
 
 <script src="js/three.min.js"></script>
 <script>
 // initialize the stuffs
-var WIDTH  = window.innerWidth;
-var HEIGHT = window.innerHeight;
-
-var ws;
 var scene = new THREE.Scene();
-var camera = new THREE.PerspectiveCamera( 75, WIDTH / (HEIGHT), 0.1, 100000);
+var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / (window.innerHeight/2), 0.1, 100000);
 var renderer = new THREE.WebGLRenderer();
-renderer.setSize( WIDTH, HEIGHT );
+renderer.setSize( window.innerWidth, window.innerHeight/2 );
 document.body.appendChild( renderer.domElement );
-window.addEventListener('mousemove', onMouseMove, false);
 
-var cubes = [];
-var light;
-var cubeCount = 33;
-var cubeContainerConstrainedToSideLengthOfThisNumber = 10;
-var mouse, raycaster, INTERSECTED;
-
-makeThisManyCubes(cubeCount);
+var cube, light;
+makeCube();
 letThereBeLight();
-environmentalInteraction();
 
 camera.position.set(10,10,10);
 camera.up = new THREE.Vector3(0,0,1);
@@ -54,39 +42,12 @@ camera.lookAt(new THREE.Vector3(0,0,0));
 console.log(scene);
 render();
 
-function onMouseMove( event ) {
-  event.preventDefault();
-
-  mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-  mouse.y = - ( event.clientY / window.innerHeight) * 2 + 1;
-}
-
-function environmentalInteraction() {
-  raycaster = new THREE.Raycaster();
-  mouse = new THREE.Vector2();
-}
-
-function makeThisManyCubes(okLetsMakeThisManyCubes){
-  for(var c=0; c<okLetsMakeThisManyCubes; c++){
-    makeCube();
-  }
-}
-
 function makeCube() {
-  var cube;
-  var geometry = new THREE.CubeGeometry(1,1,1);
+  var geometry = new THREE.CubeGeometry(10,10,7);
   var material = new THREE.MeshLambertMaterial( {color: 0x640000} );
   cube = new THREE.Mesh( geometry, material );
-  cube.position.set( randinRange(0,cubeContainerConstrainedToSideLengthOfThisNumber)
-                   , randinRange(0,cubeContainerConstrainedToSideLengthOfThisNumber)
-                   , randinRange(0,cubeContainerConstrainedToSideLengthOfThisNumber)
-                   );
-  cube.material.color.setRGB( Math.random() 
-                            , Math.random() 
-                            , Math.random() 
-                            );
+  console.log(new THREE.Box3().setFromObject(cube));
   scene.add(cube);
-  cubes.push(cube);
 }
 
 function letThereBeLight(){
@@ -95,40 +56,11 @@ function letThereBeLight(){
   scene.add(light);
 }
 
-function dealWithThisShit( touched ) {
-  if (ws && ws.readyState){
-    var scale = 100; //get somewhere between 0, 255
-    var r = touched.object.material.color.r*scale;
-    var g = touched.object.material.color.g*scale;
-    var b = touched.object.material.color.b*scale;
-    sendColor(r,g,b);
-  }
-}
-
 function render() {
   requestAnimationFrame( render );
-  camera.updateMatrixWorld();
-
-  for(var i=0; i<cubes.length; i++){
-    cubes[i].rotation.z -= 0.01;
-  }
-
-  raycaster.setFromCamera (mouse, camera);
-  var intersects = raycaster.intersectObjects(scene.children);
-
-  if (intersects.length > 0) {
-    if (INTERSECTED != intersects[0].object){
-      //make sphere
-      INTERSECTED = intersects[0].object;
-      dealWithThisShit(intersects[0]);
-    }
-  }
-
   renderer.render( scene, camera );
-}
 
-function randinRange (min, max) {
-  return Math.random() * (max - min + 1) + min;
+  cube.rotation.z -= 0.01;
 }
 
 // start color picker/sender code
@@ -136,7 +68,7 @@ var r =   0;
 var g =   0;
 var b =   0;
 
-var wsUri = "ws://192.168.1.120:9000";
+var wsUri = "ws://192.168.1.234:9000";
 
 ws = new WebSocket(wsUri);
 ws.onopen    = function(evt) { onOpen(evt)    };
@@ -166,11 +98,12 @@ function changeFavicon(color) {
 
 function onOpen(evt) {
   console.log("Websocket opened");
-  renderer.setClearColor(0x00ff00, 1);
+  document.getElementById('picker').jscolor.show();
 }
 
 function onClose(evt) {
   console.log("Websocket closed");
+  document.getElementById('picker').jscolor.hide();
 }
 
 function onMessage(evt) {
@@ -183,10 +116,10 @@ function onError(evt) {
 }
 
 function pickerUpdate(picker) {
-  red = picker.jscolor.rgb[0];
-  green = picker.jscolor.rgb[1];
-  blue = picker.jscolor.rgb[2];
-  //sendColor(red,green,blue);
+  r = picker.jscolor.rgb[0];
+  g = picker.jscolor.rgb[1];
+  b = picker.jscolor.rgb[2];
+  sendColor();
   colorCube();
 }
 
@@ -195,7 +128,7 @@ function colorCube(){
   console.log(cube);
 }
 
-function sendColor(r,g,b){
+function sendColor(){
   var data = {};
   color = [r,g,b];
   data['color'] = color;
