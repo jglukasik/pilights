@@ -80,7 +80,7 @@ def painter():
   dot_chance = 0.0
   streak_chance = 0.0
   streak_length = 20
-  tail = False
+  tail = True
   color = (0,0,0)
   fire_effect = False
   run = True
