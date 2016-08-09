@@ -7,6 +7,7 @@
   <script src="js/jscolor.js"></script> 
   <style>
     body {background-color: black; text-align: center; }
+    input {visibility: hidden;}
     pre {color: white; font-size: 20px; background-color: black; display: inline-block; }
   </style>
 </head>
@@ -15,8 +16,11 @@
 
 <pre>
 jgl.space
-<input id="picker" class="jscolor" onchange="pickerUpdate(this)" value="640000">
+<input id="picker" class="jscolor {padding:0, shadow:false, borderWidth:0,
+width: 200, height:200,
+backgroundColor: 'transparent', insetColor:'000'}" onchange="pickerUpdate(this)" value="640000">
 <div id="picker_placeholder" style="height:151px;"> 
+
   </pre>
 </div>
 
