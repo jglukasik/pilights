@@ -17,8 +17,11 @@
 <pre>
 jgl.space
 <input id="picker" class="jscolor {padding:0, shadow:false, borderWidth:0,
+mode: 'hvs',
+onFineChange:'pickerUpdate(this)',
 width: 200, height:200,
-backgroundColor: 'transparent', insetColor:'000'}" onchange="pickerUpdate(this)" value="640000">
+backgroundColor: 'transparent', insetColor:'000'}"
+ value="000000">
 <div id="picker_placeholder" style="height:151px;"> 
 
   </pre>
@@ -80,7 +83,7 @@ ws.onclose   = function(evt) { onClose(evt)   };
 ws.onmessage = function(evt) { onMessage(evt) };
 ws.onerror   = function(evt) { onError(evt)   };
 
-function changeFavicon(color) {
+function changeFavicon() {
   var canvas = document.createElement('canvas');
   canvas.width  = 16;
   canvas.height = 16;
@@ -120,9 +123,10 @@ function onError(evt) {
 }
 
 function pickerUpdate(picker) {
-  r = picker.jscolor.rgb[0];
-  g = picker.jscolor.rgb[1];
-  b = picker.jscolor.rgb[2];
+console.log(picker);
+  r = picker.rgb[0];
+  g = picker.rgb[1];
+  b = picker.rgb[2];
   sendColor();
   colorCube();
 }
@@ -134,24 +138,16 @@ function colorCube(){
 
 function sendColor(){
   var data = {};
-  color = [r,g,b];
-  data['color'] = color;
-  console.log('sending color: ' + color);
+  data['r'] = r;
+  data['g'] = g;
+  data['b'] = b;
+  data['name'] = "test";
+  data['start'] = 0;
+  data['stop'] = 450;
+  console.log('sending json: ' + JSON.stringify(data));
   ws.send(JSON.stringify(data));
-  changeFavicon(color);
+  changeFavicon();
 }
 
-function sendValue(name, value){
-  var data = {}
-  data[name] = value;
-  console.log('msg to websocket: ' + JSON.stringify(data));
-  ws.send(JSON.stringify(data));
-}
-function sendMessage(msg){
-  var data = {}
-  data['message'] = msg;
-  console.log('msg to websocket: ' + JSON.stringify(data));
-  ws.send(JSON.stringify(data));
-}
 </script>
 </html>
