@@ -51,14 +51,13 @@ camera.position.set(10,10,10);
 camera.up = new THREE.Vector3(0,0,1);
 camera.lookAt(new THREE.Vector3(0,0,0));
 
-console.log(scene);
+//console.log(scene);
 //render();
 
 function makeCube() {
   var geometry = new THREE.CubeGeometry(10,10,7);
   var material = new THREE.MeshLambertMaterial( {color: 0x640000} );
   cube = new THREE.Mesh( geometry, material );
-  console.log(new THREE.Box3().setFromObject(cube));
   scene.add(cube);
 }
 
@@ -119,7 +118,6 @@ function changeFavicon(feature) {
   var b = feature["b"];
   var ctx = canvas.getContext('2d');
   var color = "rgb(" + Math.floor(r) + "," + Math.floor(g) + "," + Math.floor(b) + ")";
-  console.log(color);
   ctx.fillStyle = color;
   ctx.fillRect(0,0,16,16);
   var link = document.createElement('link');
@@ -153,6 +151,7 @@ function onError(evt) {
 }
 
 function pickerUpdate(picker) {
+console.log(picker);
   for (var i=0; i<features.length; i++){
     var feature = features[i];
     if (feature["state"]){
@@ -179,13 +178,9 @@ function toggle(name){
 }
 function colorCube(feature){
   cube.material.color.setRGB(feature["r"]/256, feature["g"]/256, feature["b"]/256 );
-  console.log(cube);
 }
 function buttonPaint(feature){
-  console.log(feature["name"]);
   document.getElementById(feature["name"]).style.color = "rgb(" + Math.floor(feature["r"]) + "," + Math.floor(feature["g"]) + "," + Math.floor(feature["b"]) + ")";
-  console.log( "rgb(" + feature["r"] + "," + feature["g"] + "," + feature["b"] + ")");
-  console.log(document.getElementById(feature["name"]));
 }
 
 function sendColor(){
@@ -193,7 +188,6 @@ function sendColor(){
     var feature = features[i];
     if (feature["state"]){
       ws.send(JSON.stringify(feature));
-      console.log(JSON.stringify(feature));
       changeFavicon(feature);
       buttonPaint(feature);
     }
