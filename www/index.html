@@ -8,7 +8,9 @@
   <style>
     body {background-color: black; text-align: center; }
     input {visibility: hidden;}
-    pre {color: white; font-size: 20px; background-color: black; display: inline-block; }
+    pre {color: white; font-size: 20px; background-color: black;}
+    .boxes {display: inline-block; color: black}
+    .feature {display: inline-block;}
   </style>
 </head>
 
@@ -17,29 +19,18 @@
 <pre>
 jgl.space
 
+<div id="all"    class="boxes">&#x25A0</div> a<div id="alldot"    class="feature" onclick="toggle('all')"   >.</div>ll   
+<div id="bed"    class="boxes">&#x25A0</div> b<div id="beddot"    class="feature" onclick="toggle('bed')"   > </div>ed   
+<div id="closet" class="boxes">&#x25A0</div> c<div id="closetdot" class="feature" onclick="toggle('closet')"> </div>loset
 </pre>
-<br>
-<br>
-<button id="all" class="feature" onclick="toggle(this.id)">a</button>
-<pre>
-a ll   </pre>
-<br>
-<button id="bed" class="feature" onclick="toggle(this.id)">b</button>
-<pre>
-b ed   </pre>
-<br>
-<button id="closet" class="feature" onclick="toggle(this.id)">c</button>
-<pre>
-c loset</pre>
-<br>
 
 <input id="picker" class="jscolor {padding:0, shadow:false, borderWidth:0,
 mode: 'hvs',
-position:'right',
 onFineChange:'pickerUpdate(this)',
 width: 200, height:200,
 backgroundColor: 'transparent', insetColor:'000'}"
  value="000000">
+
 
 </body>
 
@@ -61,7 +52,7 @@ camera.up = new THREE.Vector3(0,0,1);
 camera.lookAt(new THREE.Vector3(0,0,0));
 
 console.log(scene);
-render();
+//render();
 
 function makeCube() {
   var geometry = new THREE.CubeGeometry(10,10,7);
@@ -178,8 +169,11 @@ function toggle(name){
   for (var i=0; i<features.length; i++){
     var feature = features[i];
     if (feature["name"] === name){
-      console.log(name);
-      feature["state"] = !feature["state"];
+      feature["state"] = true;
+      document.getElementById(feature["name"]+"dot").innerHTML = ".";
+    } else {
+      feature["state"] = false;
+      document.getElementById(feature["name"]+"dot").innerHTML = " ";
     }
   }
 }
@@ -189,7 +183,7 @@ function colorCube(feature){
 }
 function buttonPaint(feature){
   console.log(feature["name"]);
-  document.getElementById(feature["name"]).style.backgroundColor = "rgb(" + Math.floor(feature["r"]) + "," + Math.floor(feature["g"]) + "," + Math.floor(feature["b"]) + ")";
+  document.getElementById(feature["name"]).style.color = "rgb(" + Math.floor(feature["r"]) + "," + Math.floor(feature["g"]) + "," + Math.floor(feature["b"]) + ")";
   console.log( "rgb(" + feature["r"] + "," + feature["g"] + "," + feature["b"] + ")");
   console.log(document.getElementById(feature["name"]));
 }
