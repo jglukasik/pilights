@@ -76,7 +76,7 @@ if __name__ == '__main__':
   s.start()
   print "Websocket started."
 
-  with open('room.json') as room_file:
+  with open('/home/pi/pilights/room.json') as room_file:
     room = json.load(room_file)
 
   for feature in room["features"]:

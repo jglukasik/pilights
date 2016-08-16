@@ -16,16 +16,30 @@
 
 <pre>
 jgl.space
+
+</pre>
+<br>
+<br>
+<button id="all" class="feature" onclick="toggle(this.id)">a</button>
+<pre>
+a ll   </pre>
+<br>
+<button id="bed" class="feature" onclick="toggle(this.id)">b</button>
+<pre>
+b ed   </pre>
+<br>
+<button id="closet" class="feature" onclick="toggle(this.id)">c</button>
+<pre>
+c loset</pre>
+<br>
+
 <input id="picker" class="jscolor {padding:0, shadow:false, borderWidth:0,
 mode: 'hvs',
+position:'right',
 onFineChange:'pickerUpdate(this)',
 width: 200, height:200,
 backgroundColor: 'transparent', insetColor:'000'}"
  value="000000">
-<div id="picker_placeholder" style="height:151px;"> 
-
-  </pre>
-</div>
 
 </body>
 
@@ -71,9 +85,31 @@ function render() {
 }
 
 // start color picker/sender code
-var r =   0;
-var g =   0;
-var b =   0;
+var features = [
+  { name: "bed",
+    state: false,
+    r: 0,
+    g: 0,
+    b: 0,
+    start: 150,
+    stop: 234 },
+  { name: "closet",
+    state: false,
+    r: 0,
+    g: 0,
+    b: 0,
+    start: 300,
+    stop: 450 },
+  { name: "all",
+    state: true,
+    r: 0,
+    g: 0,
+    b: 0,
+    start: 0,
+    stop: 450 } ];
+
+
+
 
 var wsUri = "ws://192.168.1.234:9000";
 
@@ -83,10 +119,13 @@ ws.onclose   = function(evt) { onClose(evt)   };
 ws.onmessage = function(evt) { onMessage(evt) };
 ws.onerror   = function(evt) { onError(evt)   };
 
-function changeFavicon() {
+function changeFavicon(feature) {
   var canvas = document.createElement('canvas');
   canvas.width  = 16;
   canvas.height = 16;
+  var r = feature["r"];
+  var g = feature["g"];
+  var b = feature["b"];
   var ctx = canvas.getContext('2d');
   var color = "rgb(" + Math.floor(r) + "," + Math.floor(g) + "," + Math.floor(b) + ")";
   console.log(color);
@@ -123,30 +162,48 @@ function onError(evt) {
 }
 
 function pickerUpdate(picker) {
-console.log(picker);
-  r = picker.rgb[0];
-  g = picker.rgb[1];
-  b = picker.rgb[2];
-  sendColor();
-  colorCube();
+  for (var i=0; i<features.length; i++){
+    var feature = features[i];
+    if (feature["state"]){
+      feature["r"] = picker.rgb[0];
+      feature["g"] = picker.rgb[1];
+      feature["b"] = picker.rgb[2];
+      sendColor(feature);
+      colorCube(feature);
+    }
+  }
 }
 
-function colorCube(){
-  cube.material.color.setRGB( r/256, g/256, b/256 );
+function toggle(name){
+  for (var i=0; i<features.length; i++){
+    var feature = features[i];
+    if (feature["name"] === name){
+      console.log(name);
+      feature["state"] = !feature["state"];
+    }
+  }
+}
+function colorCube(feature){
+  cube.material.color.setRGB(feature["r"]/256, feature["g"]/256, feature["b"]/256 );
   console.log(cube);
+}
+function buttonPaint(feature){
+  console.log(feature["name"]);
+  document.getElementById(feature["name"]).style.backgroundColor = "rgb(" + Math.floor(feature["r"]) + "," + Math.floor(feature["g"]) + "," + Math.floor(feature["b"]) + ")";
+  console.log( "rgb(" + feature["r"] + "," + feature["g"] + "," + feature["b"] + ")");
+  console.log(document.getElementById(feature["name"]));
 }
 
 function sendColor(){
-  var data = {};
-  data['r'] = r;
-  data['g'] = g;
-  data['b'] = b;
-  data['name'] = "test";
-  data['start'] = 0;
-  data['stop'] = 450;
-  console.log('sending json: ' + JSON.stringify(data));
-  ws.send(JSON.stringify(data));
-  changeFavicon();
+  for (var i=0; i<features.length; i++){
+    var feature = features[i];
+    if (feature["state"]){
+      ws.send(JSON.stringify(feature));
+      console.log(JSON.stringify(feature));
+      changeFavicon(feature);
+      buttonPaint(feature);
+    }
+  }
 }
 
 </script>
