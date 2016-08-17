@@ -11,6 +11,7 @@
     pre {color: white; font-size: 20px; background-color: black;}
     .boxes {display: inline-block; color: black}
     .feature {display: inline-block;}
+    #errorMessage {margin-top: 300px; visibility: hidden; color: red}
   </style>
 </head>
 
@@ -34,6 +35,11 @@ width: 200, height:200,
 backgroundColor: 'transparent', insetColor:'000'}"
  value="000000">
 
+<pre id="errorMessage">
+this wont work
+because you're
+not on my wifi
+</pre>
 
 </body>
 
@@ -141,7 +147,6 @@ function onOpen(evt) {
 
 function onClose(evt) {
   console.log("Websocket closed");
-  document.getElementById('picker').jscolor.hide();
 }
 
 function onMessage(evt) {
@@ -150,7 +155,8 @@ function onMessage(evt) {
 
 function onError(evt) {
   console.log("error: " + evt.data);
-  document.body.style.backgroundColor = "red";
+  document.getElementById('picker').jscolor.show();
+  document.getElementById('errorMessage').style.visibility = "visible";
 }
 
 function pickerUpdate(picker) {
